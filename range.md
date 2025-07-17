@@ -11,13 +11,14 @@ $r ::= \eta..\eta \mid r \cdot r$
 
 ### Term
 $t ::= l \mid p \mid x \mid \text{for } i : l\ \text{in}\ t \mid t.\text{fst} \mid t.\text{snd} \mid \text{let } x =t \text{ in } t \mid (t,t)$
+
 $l ::= rr  \mid nat \mid float$
+
 $rr::= \text{range}(\eta,\eta) \mid rr \cdot \text{range}(\eta,\eta)$
+
 $nat = 0 \mid 1 \mid ...$
 - $x$ and $i$ are just identifiers.
-<!-- ### Typelevel term
-$\kappa ::=\alpha \mid \xi$
-- $\alpha$ is a type variable -->
+
 ### Place expression
 $p ::= x \mid p[t] \mid p\langle t \rangle \mid p.\text{fst}\mid p.\text{snd}$
 ### Type environment
