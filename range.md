@@ -10,9 +10,9 @@ $\eta ::= 0 \mid 1 \mid ...$
 $r ::= \eta..\eta \mid r \cdot r$
 
 ### Term
-$t ::= l \mid p \mid x \mid \operatorname{for} i : l\ \operatorname{in}\ t \mid t.\text{fst} \mid t.\text{snd} \mid \text{let } x =t \operatorname{in} t \mid (t,t)$
+$t ::= l \mid p \mid x \mid \text{for } i : l\ \text{in}\ t \mid t.\text{fst} \mid t.\text{snd} \mid \text{let } x =t \text{ in } t \mid (t,t)$
 $l ::= rr  \mid nat \mid float$
-$rr::= \operatorname{range}(\eta,\eta) \mid rr \cdot \operatorname{range}(\eta,\eta)$
+$rr::= \text{range}(\eta,\eta) \mid rr \cdot \text{range}(\eta,\eta)$
 $nat = 0 \mid 1 \mid ...$
 - $x$ and $i$ are just identifiers.
 <!-- ### Typelevel term
@@ -36,7 +36,7 @@ $$
     \Delta;\Gamma, (t : \sigma) \vdash  t_{body} : \sigma_{body}
   \end{array}
 }{
-  \Delta;\Gamma \vdash \text{let }x = t \operatorname{in} t_{body}
+  \Delta;\Gamma \vdash \text{let }x = t \text{ in } t_{body}
 }
 \text{T-LET}
 $$
@@ -100,7 +100,7 @@ $$
     \Delta \vdash [[rr_{iter}]] = r \\
     \Delta;\Gamma, (i:r)\vdash t_{body} : \sigma
 \end{array}}{
-    \Delta;\Gamma\vdash\operatorname{for} i : rr_{iter}\ \operatorname{in}\ t_{body}:r\cdot\sigma
+    \Delta;\Gamma\vdash\text{for } i : rr_{iter}\ \text{in}\ t_{body}:r\cdot\sigma
 }
 \text{T-FOR}
 $$
@@ -125,7 +125,7 @@ $$
 \Delta \vdash [[l_2]] = \eta_2 &
 \eta_1 \leq \eta_2
 \end{array}}
-{\Delta \vdash \operatorname[[{range}(l_1,l_2)]] = \eta_1..\eta_2}
+{\Delta \vdash \text[[{range}(l_1,l_2)]] = \eta_1..\eta_2}
 \text{K-RANGE-ONE}$$
 
 $$
