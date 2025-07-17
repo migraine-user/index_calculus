@@ -1,0 +1,5 @@
+*.html
+goals.md
+lean/*
+range.lean
+todo.md
