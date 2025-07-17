@@ -1,4 +1,4 @@
-## Syntax:
+## Grammar
 ### Base types
 $\tau ::= \sigma \mid r$
 $\sigma ::= \text{float}\mid \sigma \times \sigma \mid \eta \cdot \sigma$
@@ -9,6 +9,7 @@ $\eta ::= 0 \mid 1 \mid ...$
 ### Ranges
 $r ::= \eta..\eta \mid r \cdot r$
 
+## Syntax
 ### Term
 $t ::= l \mid p \mid x \mid \text{for } i : l\ \text{in}\ t \mid t.\text{fst} \mid t.\text{snd} \mid \text{let } x =t \text{ in } t \mid (t,t)$
 
@@ -21,6 +22,7 @@ $nat = 0 \mid 1 \mid ...$
 
 ### Place expression
 $p ::= x \mid p[t] \mid p\langle t \rangle \mid p.\text{fst}\mid p.\text{snd}$
+## Context
 ### Type environment
 $\Gamma ::= \bullet \mid \Gamma,(x:\tau)$
 ### Kind environment
