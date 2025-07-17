@@ -39,7 +39,7 @@ $$
     \Delta;\Gamma, (t : \sigma) \vdash  t_{body} : \sigma_{body}
   \end{array}
 }{
-  \Delta;\Gamma \vdash \text{let }x = t \text{ in } t_{body}
+  \Delta;\Gamma \vdash \text{let }x = t \text{ in } t_{body} : \sigma_{body}
 }
 \text{T-LET}
 $$
