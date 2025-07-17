@@ -118,6 +118,13 @@ $$
 \frac{\Delta;\Gamma \vdash v_1:\sigma_1\ \ \ \  \Delta;\Gamma \vdash v_2:\sigma_2}{\Delta;\Gamma \vdash (v_1,v_2) : \sigma_1 \times \sigma_2}\text{T-TUPLE-LIT}
 $$
 
+$$
+\frac{\Delta \vdash [[rr]] = r}{
+    \Delta;\Gamma\vdash rr : r
+}
+\text{T-RANGE-LIT}
+$$
+
 ## Kinding rules
 
 $$
