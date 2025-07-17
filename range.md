@@ -142,5 +142,3 @@ $$
 {\Delta \vdash [[nat]] = \eta }
 \text{K-NAT-LIT}
 $$
-
-$\$
