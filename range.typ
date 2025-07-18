@@ -32,14 +32,39 @@ $Delta ::= bullet$
 
 
 = Typing Rules
-// utility to stack prems vertically
-#let stack-premises(..premises) = align(center)[#premises.pos().join("\n")]
-#let push-premises(..premises) = [#premises.pos().join("     ")]
+// Utility for declarative premise stacking
+#let push-premises(premises: array) = {
+  grid(
+    columns: premises.len(),
+    column-gutter: 1em,
+    row-gutter: .5em,
+    align: center,
+    ..premises
+  )
+}
+
+#let stack-premises(premises: array) = {
+  let grid-cell(premise) = {
+    if type(premise) == array {
+      push-premises(premises: premise)
+    } else {
+      grid.cell(
+        premise,
+      )
+    }
+  }
+  let stacked = premises.map(grid-cell)
+  grid(
+    align: center,
+    row-gutter: .5em,
+    ..stacked
+  )
+}
 #set align(center)
 
 // T-LET
 #let t_let_prems = (
-  push-premises(
+  (
     $Delta;Sigma tack t:sigma$,
     $not exists tau^prime. Gamma(x)=tau^prime$,
   ),
@@ -47,7 +72,7 @@ $Delta ::= bullet$
 )
 
 #let t_let = rule(name: [T-LET], [$Sigma;Gamma tack "let" x=t "in" t_"body" : sigma_"body"$], [#stack-premises(
-    ..t_let_prems,
+    premises: t_let_prems,
   )])
 
 #prooftree(t_let)
@@ -55,24 +80,24 @@ $Delta ::= bullet$
 // T-SLICE
 #let t-slice-prems = (
   $Delta;Gamma tack t : overline(eta_i dot sigma)$,
-  push-premises(
+  (
     $Delta ; Gamma tack t_"range" : overline(eta_i^prime .. eta_i^#[$prime prime$])$,
     $overline(eta_i^#[$prime prime$]) <= overline(eta_i)$,
   ),
 )
 #let t-slice-conc = $Delta; Gamma tack t angle.l t_"range" angle.r : overline((eta_i^#[$prime prime$] - eta_i^prime + 1)) dot sigma$
-#let t_slice = rule(name: [T-SLICE], [#t-slice-conc], [#stack-premises(..t-slice-prems)])
+#let t_slice = rule(name: [T-SLICE], [#t-slice-conc], [#stack-premises(premises: t-slice-prems)])
 #prooftree(t_slice)
 
 //T-INDEX-NAT
 #let t-index-nat-prems = (
-    $Delta;Gamma tack t:eta_1 dot sigma$,
-    $Delta tack bracket.l.double italic("nat") bracket.r.double = eta_2$,
-    $eta_1 > eta_2$
+  $Delta;Gamma tack t:eta_1 dot sigma$,
+  $Delta tack bracket.l.double italic("nat") bracket.r.double = eta_2$,
+  $eta_1 > eta_2$,
 )
 #let t-index-nat = rule(
-    name: "T-INDEX-NAT",
-    $Delta;Gamma tack t[italic("nat")] : sigma$,
-    ..t-index-nat-prems
+  name: "T-INDEX-NAT",
+  $Delta;Gamma tack t[italic("nat")] : sigma$,
+  ..t-index-nat-prems,
 )
 #prooftree(t-index-nat)
