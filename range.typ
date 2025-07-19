@@ -101,11 +101,11 @@ $Delta ::= bullet$
   let premises = (
     $Delta;Gamma tack t : overline(eta_i dot sigma)$,
     (
-      $Delta ; Gamma tack t_"range" : overline(eta_i^prime .. eta_i^#[$prime prime$])$,
+      $Delta ; Gamma tack bracket.l.double"rl"bracket.r.double = overline(eta_i^prime .. eta_i^#[$prime prime$])$,
       $overline(eta_i^#[$prime prime$]) <= overline(eta_i)$,
     ),
   )
-  let conclusion = $Delta; Gamma tack t angle.l t_"range" angle.r : overline((eta_i^#[$prime prime$] - eta_i^prime + 1)) dot sigma$
+  let conclusion = $Delta; Gamma tack t angle.l "rl" angle.r : overline((eta_i^#[$prime prime$] - eta_i^prime)) dot sigma$
   let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises))
   prooftree(_rule)
 }
@@ -126,8 +126,6 @@ $Delta ::= bullet$
   )
   prooftree(_rule)
 }
-
-
 
 // T-INDEX-RANGE
 #{
@@ -168,18 +166,6 @@ $Delta ::= bullet$
   )
   prooftree(_rule)
 }
-
-// T-RANGE-LIT
-// #{
-//   let premise = $Delta tack bracket.l.double r l bracket.r.double = r$
-//   let conclusion = $Delta; Gamma tack r l : r$
-//   let _rule = rule(
-//     name: "T-RANGE-LIT",
-//     conclusion,
-//     premise,
-//   )
-//   prooftree(_rule)
-// }
 
 // T-FLOAT-LIT
 #{
@@ -245,3 +231,58 @@ $Delta ::= bullet$
   )
   prooftree(_rule)
 }
+#set align(left)
+#pagebreak()
+= Examples
+== For expression
+```scala
+for i: range(0,5) . range(0,6) . range(0.7) in 4.2
+```
+This results in a value of type $(0..5) dot (0..6) dot (0..7) dot italic("float")$
+```scala
+for i : range(0,5) in for j: range(0,10) in 1.2
+```
+This results in a value of type $(0..5) dot (0..10) dot italic("float")$
+== Indexing by a value of type range
+```scala
+for i: range(0,5) in a[0][i]
+```
+This is equivalent to: `a[0][0:5]`
+== Slicing
+```scala
+a[range(0,10) . range(0,5)]
+```
+This is of type $(0..10) dot (0..5) dot sigma$
+where $sigma$ is the type of $a[0][0]$
+== let in
+```ocaml
+let arr =
+  for i: range(0,5) in
+    for j : range(0,5) in
+      3.14159
+  in arr[range(0,2).range(0,1)]
+```
+This is of type $(0..2)dot (0..1) dot italic("float")$
+
+== let in, for, and tuple
+=== tuple
+```ocaml
+let arr_1 =
+  for i: range(0,5) in
+    for j: range(0,5) in
+      3.14159 in
+let arr_2 =
+  for i: range(2,4) in
+    for j: range(1,3) in
+      arr_1[i][j] in
+(arr_1, arr_2)
+```
+This is of type $((0..5) dot (0..5) dot italic("float")) times ((0..2) dot (0..2) dot italic("float"))$
+
+=== nested tuple/array
+```ocaml
+let tup = (3.14159, for i : range(0,5) in 6.25) in
+  for i : range(0,10) in
+    tup
+```
+This is of type $(0..10) dot (italic("float") times ((0..5) dot italic("float")))$
