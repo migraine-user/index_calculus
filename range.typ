@@ -238,11 +238,11 @@ $Delta ::= bullet$
 ```scala
 for i: range(0,5) . range(0,6) . range(0.7) in 4.2
 ```
-This results in a value of type $(0..5) dot (0..6) dot (0..7) dot italic("float")$
+This results in a value of type $5 dot 6 dot 7 dot italic("float")$
 ```scala
 for i : range(0,5) in for j: range(0,10) in 1.2
 ```
-This results in a value of type $(0..5) dot (0..10) dot italic("float")$
+This results in a value of type $5 dot 10 dot italic("float")$
 == Indexing by a value of type range
 ```scala
 for i: range(0,5) in a[0][i]
@@ -252,7 +252,7 @@ This is equivalent to: `a[0][0:5]`
 ```scala
 a[range(0,10) . range(0,5)]
 ```
-This is of type $(0..10) dot (0..5) dot sigma$
+This is of type $10 dot 5 dot sigma$
 where $sigma$ is the type of $a[0][0]$
 == let in
 ```ocaml
@@ -262,7 +262,7 @@ let arr =
       3.14159
   in arr[range(0,2).range(0,1)]
 ```
-This is of type $(0..2)dot (0..1) dot italic("float")$
+This is of type $2dot 1 dot italic("float")$
 
 == let in, for, and tuple
 === tuple
@@ -277,7 +277,7 @@ let arr_2 =
       arr_1[i][j] in
 (arr_1, arr_2)
 ```
-This is of type $((0..5) dot (0..5) dot italic("float")) times ((0..2) dot (0..2) dot italic("float"))$
+This is of type $(5 dot 5 dot italic("float")) times (2 dot 2 dot italic("float"))$
 
 === nested tuple/array
 ```ocaml
@@ -285,4 +285,4 @@ let tup = (3.14159, for i : range(0,5) in 6.25) in
   for i : range(0,10) in
     tup
 ```
-This is of type $(0..10) dot (italic("float") times ((0..5) dot italic("float")))$
+This is of type $10 dot (italic("float") times (5 dot italic("float")))$
