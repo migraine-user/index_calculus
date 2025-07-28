@@ -205,31 +205,31 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 = Examples
 == For expression
 ```scala
-for i: range(0,5) . range(0,6) . range(0.7) in 4.2
+for i: (0..5).(0..6).(0..7) in 4.2
 ```
 This results in a value of type $5 dot 6 dot 7 dot italic("float")$
 ```scala
-for i : range(0,5) in for j: range(0,10) in 1.2
+for i : 0..5 in for j: 0..10 in 1.2
 ```
 This results in a value of type $5 dot 10 dot italic("float")$
 == Indexing by a value of type range
 ```scala
-for i: range(0,5) in a[0][i]
+for i: 0..5 in a[0][i]
 ```
 This is equivalent to: `a[0][0:5]`
 == Slicing
 ```scala
-a[range(0,10) . range(0,5)]
+a[(0..10).(0..5)]
 ```
 This is of type $10 dot 5 dot sigma$
 where $sigma$ is the type of $a[0][0]$
 == let in
 ```ocaml
 let arr =
-  for i: range(0,5) in
-    for j : range(0,5) in
+  for i: 0..5 in
+    for j : 0..5 in
       3.14159
-  in arr[range(0,2).range(0,1)]
+  in arr[(0..2).(0..1)]
 ```
 This is of type $2dot 1 dot italic("float")$
 
@@ -237,12 +237,12 @@ This is of type $2dot 1 dot italic("float")$
 === tuple
 ```ocaml
 let arr_1 =
-  for i: range(0,5) in
-    for j: range(0,5) in
+  for i: 0..5 in
+    for j: 0..5 in
       3.14159 in
 let arr_2 =
-  for i: range(2,4) in
-    for j: range(1,3) in
+  for i: 2..4 in
+    for j: 1..3 in
       arr_1[i][j] in
 (arr_1, arr_2)
 ```
@@ -250,8 +250,8 @@ This is of type $(5 dot 5 dot italic("float")) times (2 dot 2 dot italic("float"
 
 === nested tuple/array
 ```ocaml
-let tup = (3.14159, for i : range(0,5) in 6.25) in
-  for i : range(0,10) in
+let tup = (3.14159, for i : 0..5 in 6.25) in
+  for i : 0..10 in
     tup
 ```
 This is of type $10 dot (italic("float") times (5 dot italic("float")))$
