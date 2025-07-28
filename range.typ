@@ -9,7 +9,7 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta bar r dot r$
 = Term
-$t ::= l bar p bar "for" i : r "in" t bar t."fst" bar t."snd" bar "let" x = t "in" t bar (t,t)$
+$t ::= "fl" bar p bar "for" i : r "in" t bar t."fst" bar t."snd" bar "let" x = t "in" t bar (t,t)$
 - $i$ and $x$ are identifiers.
 == Literal
 $"fl" = 0.0 bar -4.21 bar 523.215 bar ...$
