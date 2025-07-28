@@ -16,7 +16,7 @@ inductive Indexable: Type
 | Range: Range -> Indexable
 
 inductive Ident: Type
-| ident: String -> Ident
+| Ident: String -> Ident
 
 inductive PlaceExpr: Type
 | Ident: Ident -> PlaceExpr
@@ -32,4 +32,4 @@ inductive Term: Type
 | Let: Ident -> Term -> Term -> Term
 | Tuple: Term -> Term -> Term
 
-abbrev TyEnv := List (Ident × Ty)
+abbrev TyEnv := List Ident × Ty
