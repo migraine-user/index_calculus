@@ -4,20 +4,15 @@
 $tau ::= sigma bar r$
 
 $sigma ::= italic("float") bar sigma times sigma bar eta dot sigma$
-== (Meta) Natural Number
+== Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta bar r dot r$
 = Term
-$t ::= l bar p bar x bar "for" i : l "in" t bar t."fst" bar t."snd" bar "let" x = t "in" t bar (t,t)$
+$t ::= l bar p bar "for" i : r "in" t bar t."fst" bar t."snd" bar "let" x = t "in" t bar (t,t)$
+- $i$ and $x$ are identifiers.
 == Literal
-$l ::= "nat" bar "float"$
-
-$"nat" = 0 bar 1 bar ...$
-
-$"float" = 0.0 bar -4.21 bar 523.215 bar ...$
-== Range Literal
-$"rl" ::= "range"("nat","nat") bar "range"("nat","nat") dot "rl"$
+$"fl" = 0.0 bar -4.21 bar 523.215 bar ...$
 
 == Place Expression
 $p::= x bar p[t] bar p angle.l t angle.r bar p."fst" bar p."snd"$
@@ -26,11 +21,6 @@ $p::= x bar p[t] bar p angle.l t angle.r bar p."fst" bar p."snd"$
 = Environment
 == Type Environment
 $Gamma ::= bullet bar Gamma,(x:tau)$
-== Kind Environment
-$Delta ::= bullet$
-- there are no contents to be used.
-
-
 
 = Typing Rules
 // Utility for declarative premise stacking
@@ -40,11 +30,12 @@ $Delta ::= bullet$
     column-gutter: 1em,
     row-gutter: .5em,
     align: center,
+    inset: (x: 2pt),
     ..premises
   )
 }
 
-#let stack-premises(premises: array) = {
+#let stack-premises(premises: array, height_diff: 0pt) = {
   let grid-cell(premise) = {
     if type(premise) == array {
       push-premises(premises: premise)
@@ -58,7 +49,8 @@ $Delta ::= bullet$
   grid(
     align: center,
     row-gutter: .5em,
-    ..stacked
+    inset: (y: height_diff),
+    ..stacked,
   )
 }
 #set align(center)
@@ -66,17 +58,12 @@ $Delta ::= bullet$
 // T-LET
 #{
   let premises = (
-    (
-      $Delta;Gamma tack t:sigma$,
-      $not exists tau. Gamma(x)=tau$,
-    ),
-    $Delta;Gamma,(x:sigma) tack t_"body":sigma_"body"$,
+    $Gamma tack t:sigma$,
+    $Gamma,(x:sigma) tack t_"body":sigma_"body"$,
   )
-  let conclusion = $Delta;Gamma tack "let" x=t "in" t_"body" : sigma_"body"$
+  let conclusion = $Gamma tack "let" x=t "in" t_"body" : sigma_"body"$
 
-  let _rule = rule(name: [T-LET], conclusion, stack-premises(
-    premises: premises,
-  ))
+  let _rule = rule(name: [T-LET], conclusion, ..premises)
 
   prooftree(_rule)
 }
@@ -84,10 +71,10 @@ $Delta ::= bullet$
 // T-FOR
 #{
   let premises = (
-    $Gamma tack bracket.l.double "rl" bracket.r.double = r$,
-    $Delta;Gamma,(i:r) tack t_"body" : sigma$,
+    $r:"ok"$,
+    $Gamma,(i:r) tack t_"body" : sigma$,
   )
-  let conclusion = $Delta;Gamma tack "for" i: "rl" "in" t_"body" : r dot sigma$
+  let conclusion = $Gamma tack "for" i: r "in" t_"body" : r dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,
@@ -99,30 +86,25 @@ $Delta ::= bullet$
 // T-SLICE
 #{
   let premises = (
-    $Delta;Gamma tack t : overline(eta_i dot sigma)$,
-    (
-      $Delta ; Gamma tack bracket.l.double"rl"bracket.r.double = overline(eta_i^prime .. eta_i^#[$prime prime$])$,
-      $overline(eta_i^#[$prime prime$]) <= overline(eta_i)$,
-    ),
+    $Gamma tack t : eta_1 dot eta_2 ... dot eta_n dot sigma$,
+    $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
+    ($r:"ok"$, $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$),
   )
-  let conclusion = $Delta; Gamma tack t angle.l "rl" angle.r : overline((eta_i^#[$prime prime$] - eta_i^prime)) dot sigma$
-  let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises))
+  let conclusion = $Gamma tack t angle.l r angle.r : (eta_1^#[$prime prime$] - eta_1^prime) dot (eta_2^#[$prime prime$] - eta_2^prime) dot ... dot (eta_n^#[$prime prime$] - eta_n^prime) dot sigma$
+  let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises, height_diff: 1pt))
   prooftree(_rule)
 }
 
 
 //T-INDEX-NAT
 #{
-  let premises = (
-    $Delta;Gamma tack t:eta_1 dot sigma$,
-    $Delta tack bracket.l.double italic("nat") bracket.r.double = eta_2$,
-    $eta_1 > eta_2$,
-  )
-  let conclusion = $Delta;Gamma tack t[italic("nat")] : sigma$
+  let premise = $Gamma tack t[eta..(eta+1)]$
+
+  let conclusion = $Gamma tack t[eta] : sigma$
   let _rule = rule(
     name: "T-INDEX-NAT",
     conclusion,
-    ..premises,
+    premise,
   )
   prooftree(_rule)
 }
@@ -130,23 +112,19 @@ $Delta ::= bullet$
 // T-INDEX-RANGE
 #{
   let premises = (
-    $Delta; Gamma tack t : overline(eta_i) dot sigma$,
-    $Delta tack t_"index" : overline(eta_i^prime..eta_i^#[$prime prime$])$,
-    $overline(eta_i^#[$prime prime$]) <= overline(eta_i)$,
+    $Gamma tack t : overline(eta_i) dot sigma$,
+    $Gamma tack t_"index" : (eta_1^prime..eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) dot ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
+    $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$,
   )
-  let conclusion = $Delta;Gamma tack t[t_"index"]: sigma$
-  let _rule = rule(
-    name: "T-INDEX-RANGE",
-    conclusion,
-    ..premises,
-  )
+  let conclusion = $Gamma tack t[t_"index"]: sigma$
+  let _rule = rule(name: "T-INDEX-RANGE", conclusion, stack-premises(premises: premises, height_diff: 1pt))
   prooftree(_rule)
 }
 
 // T-FST
 #{
-  let premise = $Delta;Gamma tack t:sigma_1 times sigma_2$
-  let conclusion = $Delta;Gamma tack t."fst":sigma_1$
+  let premise = $Gamma tack t:sigma_1 times sigma_2$
+  let conclusion = $Gamma tack t."fst":sigma_1$
   let _rule = rule(
     name: "T-FST",
     conclusion,
@@ -157,8 +135,8 @@ $Delta ::= bullet$
 
 // T-SND
 #{
-  let premise = $Delta;Gamma tack t:sigma_1 times sigma_2$
-  let conclusion = $Delta;Gamma tack t."snd":sigma_2$
+  let premise = $Gamma tack t:sigma_1 times sigma_2$
+  let conclusion = $Gamma tack t."snd":sigma_2$
   let _rule = rule(
     name: "T-SND",
     conclusion,
@@ -169,7 +147,7 @@ $Delta ::= bullet$
 
 // T-FLOAT-LIT
 #{
-  let conclusion = $Delta;Gamma tack "float": italic("float")$
+  let conclusion = $Gamma tack "fl": italic("float")$
   let _rule = rule(
     name: "T-FLOAT-LIT",
     conclusion,
@@ -180,10 +158,10 @@ $Delta ::= bullet$
 // T-TUPLE-LIT
 #{
   let premises = (
-    $Delta;Gamma tack t_1: sigma_1$,
-    $Delta;Gamma tack t_2: sigma_2$,
+    $Gamma tack t_1: sigma_1$,
+    $Gamma tack t_2: sigma_2$,
   )
-  let conclusion = $Delta;Gamma tack (t_1,t_2) : sigma_1 times sigma_2$
+  let conclusion = $Gamma tack (t_1,t_2) : sigma_1 times sigma_2$
   let _rule = rule(
     name: "T-TUPLE-LIT",
     conclusion,
@@ -194,38 +172,29 @@ $Delta ::= bullet$
 
 
 
-#align(left)[= Kinding rules]
-// K-NAT-LIT
-#{
-  prooftree(rule(
-    name: "K-NAT-LIT",
-    $Delta tack bracket.l.double "nat" bracket.r.double = eta$,
-  ))
-}
-// K-RANGE-ONE
+#align(left)[= Well-formedness rules]
+// W-RANGE-ONE
 #{
   let premises = (
-    $Delta tack bracket.l.double "nat"_1 bracket.r.double= eta_1$,
-    $Delta tack bracket.l.double "nat"_2 bracket.r.double= eta_2$,
     $eta_1 <= eta_2$,
   )
-  let conclusion = $Delta tack bracket.l.double "range"("nat"_1, "nat"_2) bracket.r.double = eta_1 .. eta_2$
+  let conclusion = $eta_1 .. eta_2 : "ok"$
   let _rule = rule(
-    name: "K-RANGE-ONE",
+    name: "W-RANGE-ONE",
     conclusion,
     ..premises,
   )
   prooftree(_rule)
 }
-// K-RANGE-MUL
+// W-RANGE-MUL
 #{
   let premises = (
-    $Delta tack bracket.l.double "rl"_1 bracket.r.double = r_1$,
-    $Delta tack bracket.l.double "rl"_2 bracket.r.double = r_2$,
+    $r_1 : "ok"$,
+    $r_2: "ok"$,
   )
-  let conclusion = $Delta tack bracket.l.double "rl"_1 dot "rl"_2 bracket.r.double= r_1 dot r_2$
+  let conclusion = $r_1 dot r_2: "ok"$
   let _rule = rule(
-    name: "K-RANGE-MUL",
+    name: "W-RANGE-MUL",
     conclusion,
     ..premises,
   )
