@@ -9,13 +9,13 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta bar r dot r$
 = Term
-$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
 - $i$ and $x$ are identifiers.
 == Literal
-$"fl" = 0.0 bar -4.21 bar 523.215 bar ...$
+$"fl" ::= 0.0 bar -4.21 bar 523.215 bar ...$
 
 == Place Expression
-$p::= x bar p[t] bar p angle.l t angle.r bar p."fst" bar p."snd"$
+$p::= x bar p[t] bar p angle.l r angle.r bar p."fst" bar p."snd"$
 
 
 = Environment
@@ -55,6 +55,18 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 }
 #set align(center)
 
+// T -VAR
+#{
+  let premises = (
+    $x : sigma in Gamma$,
+  )
+  let conclusion = $Gamma tack x : sigma$
+
+  let _rule = rule(name: [T-VAR], conclusion, ..premises)
+
+  prooftree(_rule)
+}
+
 // T-LET
 #{
   let premises = (
@@ -87,8 +99,8 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 #{
   let premises = (
     $Gamma tack t : eta_1 dot eta_2 ... dot eta_n dot sigma$,
-    $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
-    ($r:"ok"$, $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$),
+    ($r:"ok"$, $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) ... dot (eta_n^prime .. eta_n^#[$prime prime$])$),
+    $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$,
   )
   let conclusion = $Gamma tack t angle.l r angle.r : (eta_1^#[$prime prime$] - eta_1^prime) dot (eta_2^#[$prime prime$] - eta_2^prime) dot ... dot (eta_n^#[$prime prime$] - eta_n^prime) dot sigma$
   let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises, height_diff: 1pt))
@@ -96,6 +108,7 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 }
 
 
+/*
 //T-INDEX-NAT
 #{
   let premise = $Gamma tack t[eta..(eta+1)]$
@@ -108,6 +121,7 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
+*/
 
 // T-INDEX-RANGE
 #{
@@ -120,6 +134,42 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   let _rule = rule(name: "T-INDEX-RANGE", conclusion, stack-premises(premises: premises, height_diff: 1pt))
   prooftree(_rule)
 }
+
+// T-FLOAT-LIT
+#{
+  let conclusion = $Gamma tack "fl": italic("float")$
+  let _rule = rule(
+    name: "T-FLOAT-LIT",
+    conclusion,
+  )
+  prooftree(_rule)
+}
+
+// T-NAT-LIT
+#{
+  let conclusion = $Gamma tack eta: eta..(eta+1) $
+  let _rule = rule(
+    name: "T-NAT-LIT",
+    conclusion,
+  )
+  prooftree(_rule)
+}
+
+// T-TUPLE-LIT
+#{
+  let premises = (
+    $Gamma tack t_1: sigma_1$,
+    $Gamma tack t_2: sigma_2$,
+  )
+  let conclusion = $Gamma tack (t_1,t_2) : sigma_1 times sigma_2$
+  let _rule = rule(
+    name: "T-TUPLE-LIT",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
+
 
 // T-FST
 #{
@@ -144,32 +194,6 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
-
-// T-FLOAT-LIT
-#{
-  let conclusion = $Gamma tack "fl": italic("float")$
-  let _rule = rule(
-    name: "T-FLOAT-LIT",
-    conclusion,
-  )
-  prooftree(_rule)
-}
-
-// T-TUPLE-LIT
-#{
-  let premises = (
-    $Gamma tack t_1: sigma_1$,
-    $Gamma tack t_2: sigma_2$,
-  )
-  let conclusion = $Gamma tack (t_1,t_2) : sigma_1 times sigma_2$
-  let _rule = rule(
-    name: "T-TUPLE-LIT",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
-
 
 
 #align(left)[= Well-formedness rules]
