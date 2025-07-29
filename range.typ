@@ -98,9 +98,9 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-SLICE
 #{
   let premises = (
-    $Gamma tack t : eta_1 dot eta_2 ... dot eta_n dot sigma$,
-    ($r:"ok"$, $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) ... dot (eta_n^prime .. eta_n^#[$prime prime$])$),
-    $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$,
+    $Gamma tack t : eta_1 dot ... dot eta_n dot sigma$,
+    ($r:"ok"$, $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot ... dot (eta_n^prime .. eta_n^#[$prime prime$])$),
+    $forall i in {1,...,n}.eta_i^#[$prime prime$] <= eta_i$,
   )
   let conclusion = $Gamma tack t angle.l r angle.r : (eta_1^#[$prime prime$] - eta_1^prime) dot (eta_2^#[$prime prime$] - eta_2^prime) dot ... dot (eta_n^#[$prime prime$] - eta_n^prime) dot sigma$
   let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises, height_diff: 1pt))
@@ -126,9 +126,9 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-INDEX-RANGE
 #{
   let premises = (
-    $Gamma tack t : overline(eta_i) dot sigma$,
-    $Gamma tack t_"index" : (eta_1^prime..eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) dot ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
-    $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$,
+    $Gamma tack t : eta_1..eta_n dot sigma$,
+    $Gamma tack t_"index" : (eta_1^prime..eta_1^#[$prime prime$]) dot ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
+    $forall i in {1,...,n}.eta_i^#[$prime prime$] <= eta_i$,
   )
   let conclusion = $Gamma tack t[t_"index"]: sigma$
   let _rule = rule(name: "T-INDEX-RANGE", conclusion, stack-premises(premises: premises, height_diff: 1pt))
