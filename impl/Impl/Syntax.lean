@@ -11,6 +11,7 @@ deriving Repr
 inductive Ty: Type
 | Range: Range -> Ty
 | Data: DataTy -> Ty
+| Nat: Nat -> Ty
 deriving Repr
 
 inductive Indexable: Type
@@ -36,6 +37,7 @@ deriving Repr
 
 inductive Term: Type
 | FloatLit: Float -> Term
+| NatLit: Nat -> Term
 | Place: PlaceExpr -> Term
 | For: Ident -> Range -> Term -> Term
 | Let: Ident -> Term -> Term -> Term

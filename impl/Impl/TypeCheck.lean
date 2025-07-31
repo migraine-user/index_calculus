@@ -2,14 +2,15 @@ import Impl.Syntax
 mutual
 def term (tyEnv:TyEnv)(t:Term) : Option Ty :=
   match t with
+  | Term.NatLit n => some (Ty.Nat n)
   | Term.FloatLit _ => Ty.Data DataTy.Float |> some
   | Term.Place _placeExpr => Option.map Ty.Data (placeExpr tyEnv _placeExpr)
   | Term.For id rnge body => do
     let ⟨l,r,_⟩ := rnge
     let elemTy <- term ((id, Ty.Range rnge)::tyEnv) body
     match elemTy with
-    | Ty.Range _ => none
     | Ty.Data elemTy => pure (Ty.Data (DataTy.Array (r-l) elemTy))
+    | _ => none
   | Term.Let id tDef tBody => do
     let tyDef <- term tyEnv tDef
     term ((id, tyDef)::tyEnv) tBody
@@ -34,10 +35,11 @@ def indexExpr (tyEnv: TyEnv)(t:IndexExpr) : Option DataTy := do
   match placeTy with
   | DataTy.Array n dty =>
     match tyIndex with
-    | Ty.Data _ => none
+    | Ty.Nat i => if i <= n then some dty else none
     | Ty.Range rnge =>
       let ⟨_,r,_⟩ := rnge
       if r <= n then some dty else none
+    | _ => none
   | _ => none
 def placeExpr (tyEnv:TyEnv)(t:PlaceExpr) : Option DataTy :=
   match t with
@@ -45,7 +47,7 @@ def placeExpr (tyEnv:TyEnv)(t:PlaceExpr) : Option DataTy :=
     let ty <- findDef tyEnv id
     match ty with
     | Ty.Data dty => some dty
-    | Ty.Range _ => none
+    | _ => none
   | PlaceExpr.Index _indexExpr => indexExpr tyEnv _indexExpr
   | PlaceExpr.Fst _placeExpr => do
     let ty <- placeExpr tyEnv _placeExpr
