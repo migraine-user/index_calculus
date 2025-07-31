@@ -153,7 +153,7 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   let conclusion = $eta_1 .. eta_2 : "ok"$
   let _rule = rule(
-    name: "W-RANGE-ONE",
+    name: "W-RANGE",
     conclusion,
     ..premises,
   )
