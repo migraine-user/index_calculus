@@ -9,10 +9,10 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
 - $i$ and $x$ are identifiers.
 == Literal
-$"fl" = 0.0 bar -4.21 bar 523.215 bar ...$
+$"fl" ::= 0.0 bar -4.21 bar 523.215 bar ...$
 
 == Place Expression
 $p::= x bar p[t] bar p."fst" bar p."snd"$
@@ -54,6 +54,18 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
 }
 #set align(center)
+
+// T -VAR
+#{
+  let premises = (
+    $x : sigma in Gamma$,
+  )
+  let conclusion = $Gamma tack x : sigma$
+
+  let _rule = rule(name: [T-VAR], conclusion, ..premises)
+
+  prooftree(_rule)
+}
 
 // T-LET
 #{
@@ -131,32 +143,6 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
-
-// T-FLOAT-LIT
-#{
-  let conclusion = $Gamma tack "fl": italic("float")$
-  let _rule = rule(
-    name: "T-FLOAT-LIT",
-    conclusion,
-  )
-  prooftree(_rule)
-}
-
-// T-TUPLE-LIT
-#{
-  let premises = (
-    $Gamma tack t_1: sigma_1$,
-    $Gamma tack t_2: sigma_2$,
-  )
-  let conclusion = $Gamma tack (t_1,t_2) : sigma_1 times sigma_2$
-  let _rule = rule(
-    name: "T-TUPLE-LIT",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
-
 
 
 #align(left)[= Well-formedness rules]
