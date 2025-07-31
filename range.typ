@@ -7,7 +7,7 @@ $sigma ::= italic("float") bar sigma times sigma bar eta dot sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
-$r::= eta..eta bar r dot r$
+$r::= eta..eta$
 = Term
 $t ::= "fl" bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
 - $i$ and $x$ are identifiers.
@@ -15,7 +15,7 @@ $t ::= "fl" bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
 $"fl" = 0.0 bar -4.21 bar 523.215 bar ...$
 
 == Place Expression
-$p::= x bar p[t] bar p angle.l t angle.r bar p."fst" bar p."snd"$
+$p::= x bar p[t] bar p."fst" bar p."snd"$
 
 
 = Environment
@@ -83,19 +83,6 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   prooftree(_rule)
 }
 
-// T-SLICE
-#{
-  let premises = (
-    $Gamma tack t : eta_1 dot eta_2 ... dot eta_n dot sigma$,
-    $r = (eta_1^prime .. eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
-    ($r:"ok"$, $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$),
-  )
-  let conclusion = $Gamma tack t angle.l r angle.r : (eta_1^#[$prime prime$] - eta_1^prime) dot (eta_2^#[$prime prime$] - eta_2^prime) dot ... dot (eta_n^#[$prime prime$] - eta_n^prime) dot sigma$
-  let _rule = rule(name: [T-SLICE], conclusion, stack-premises(premises: premises, height_diff: 1pt))
-  prooftree(_rule)
-}
-
-
 //T-INDEX-NAT
 #{
   let premise = $Gamma tack t[eta..(eta+1)]$
@@ -112,12 +99,12 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-INDEX-RANGE
 #{
   let premises = (
-    $Gamma tack t : overline(eta_i) dot sigma$,
-    $Gamma tack t_"index" : (eta_1^prime..eta_1^#[$prime prime$]) dot (eta_2^prime .. eta_2^#[$prime prime$]) dot ... dot (eta_n^prime .. eta_n^#[$prime prime$])$,
-    $forall i in {1,2,...,n}.eta_i^#[$prime prime$] <= eta_i$,
+    $Gamma tack t : eta_(t) dot sigma$,
+    $Gamma tack t_("index") : eta_(l)..eta_(r)$,
+    $eta_(r) <= eta_(t)$,
   )
   let conclusion = $Gamma tack t[t_"index"]: sigma$
-  let _rule = rule(name: "T-INDEX-RANGE", conclusion, stack-premises(premises: premises, height_diff: 1pt))
+  let _rule = rule(name: "T-INDEX-RANGE", conclusion, ..premises)
   prooftree(_rule)
 }
 
@@ -186,56 +173,54 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
-// W-RANGE-MUL
-#{
-  let premises = (
-    $r_1 : "ok"$,
-    $r_2: "ok"$,
-  )
-  let conclusion = $r_1 dot r_2: "ok"$
-  let _rule = rule(
-    name: "W-RANGE-MUL",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
+
 #set align(left)
 #pagebreak()
 = Examples
 == For expression
 ```scala
-for i: (0..5).(0..6).(0..7) in 4.2
+for i: (0..5) in
+  for j: (0..6) in
+    for k: (0..7) in
+      4.2
 ```
 This results in a value of type $5 dot 6 dot 7 dot italic("float")$
 ```scala
-for i : 0..5 in for j: 0..10 in 1.2
+for i : 0..5 in
+  for j: 0..10 in
+    1.2
 ```
 This results in a value of type $5 dot 10 dot italic("float")$
 == Indexing by a value of type range
 ```scala
-for i: 0..5 in a[0][i]
+for i: 0..5 in
+  a[0][i]
 ```
 This is equivalent to: `a[0][0:5]`
 == Slicing
 ```scala
-a[(0..10).(0..5)]
+for i: 0..10 in
+  for j: 0..5 in
+    a[i][j]
 ```
-This is of type $10 dot 5 dot sigma$
+This is of type $10 dot 5 dot sigma$ and equivalent to `a[0..10][0..5]`
 where $sigma$ is the type of $a[0][0]$
 == let in
-```ocaml
+```scala
 let arr =
   for i: 0..5 in
     for j : 0..5 in
       3.14159
-  in arr[(0..2).(0..1)]
+in
+for i: 0..2 in
+  for j: 0..1 in
+    arr[i][j]
 ```
 This is of type $2dot 1 dot italic("float")$
 
 == let in, for, and tuple
 === tuple
-```ocaml
+```scala
 let arr_1 =
   for i: 0..5 in
     for j: 0..5 in
@@ -248,7 +233,7 @@ let arr_2 =
 ```
 This is of type $(5 dot 5 dot italic("float")) times (2 dot 2 dot italic("float"))$
 
-=== nested tuple/array
+=== Nested tuple/array
 ```ocaml
 let tup = (3.14159, for i : 0..5 in 6.25) in
   for i : 0..10 in
