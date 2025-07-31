@@ -11,7 +11,6 @@ deriving Repr
 inductive Ty: Type
 | Range: Range -> Ty
 | Data: DataTy -> Ty
-| Nat: Nat -> Ty
 deriving Repr
 
 inductive Indexable: Type

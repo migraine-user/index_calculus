@@ -2,7 +2,7 @@ import Impl.Syntax
 mutual
 def term (tyEnv:TyEnv)(t:Term) : Option Ty :=
   match t with
-  | Term.NatLit n => some (Ty.Nat n)
+  | Term.NatLit _ => none -- a nat term has no type.
   | Term.FloatLit _ => Ty.Data DataTy.Float |> some
   | Term.Place _placeExpr => Option.map Ty.Data (placeExpr tyEnv _placeExpr)
   | Term.For id rnge body => do
