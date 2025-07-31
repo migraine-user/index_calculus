@@ -86,3 +86,8 @@ def exLast :=
   (Term.Let (Ident.Ident "tup") tupDef (Term.For (Ident.Ident "i") (Range.Range 0 10 (by decide)) (Term.Place (PlaceExpr.Ident (Ident.Ident "tup")))))
 #eval exLast
 #eval term [] exLast
+
+def exIndexNat := (Term.Place (PlaceExpr.Index (IndexExpr.Index (PlaceExpr.Ident (Ident.Ident "arr")) (Term.NatLit 0))))
+def exx := (Term.Let (Ident.Ident "arr") ex1 exIndexNat)
+#eval exx
+#eval term [] exx
