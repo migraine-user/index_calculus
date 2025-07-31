@@ -83,10 +83,11 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-FOR
 #{
   let premises = (
+    $r = eta_1 ..eta_2$,
     $r:"ok"$,
     $Gamma,(i:r) tack t_"body" : sigma$,
   )
-  let conclusion = $Gamma tack "for" i: r "in" t_"body" : r dot sigma$
+  let conclusion = $Gamma tack "for" i: r "in" t_"body" : (eta_2 -eta_1) dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,

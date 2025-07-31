@@ -4,8 +4,12 @@ def term (tyEnv:TyEnv)(t:Term) : Option Ty :=
   match t with
   | Term.FloatLit _ => Ty.Data DataTy.Float |> some
   | Term.Place _placeExpr => Option.map Ty.Data (placeExpr tyEnv _placeExpr)
-  | Term.For id r body => do
-    term ((id, Ty.Range r)::tyEnv) body
+  | Term.For id rnge body => do
+    let ⟨l,r,_⟩ := rnge
+    let elemTy <- term ((id, Ty.Range rnge)::tyEnv) body
+    match elemTy with
+    | Ty.Range _ => none
+    | Ty.Data elemTy => pure (Ty.Data (DataTy.Array (r-l) elemTy))
   | Term.Let id tDef tBody => do
     let tyDef <- term tyEnv tDef
     term ((id, tyDef)::tyEnv) tBody
@@ -62,3 +66,10 @@ def ex1 :=
         (Term.FloatLit 4.2))))
 #eval ex1
 #eval term [] ex1
+
+def exLast :=
+  let tupDef:= (Term.Tuple (Term.FloatLit 3.14159) (Term.For (Ident.Ident "i") (Range.Range 0 5 (by decide))
+    (Term.FloatLit 6.25)))
+  (Term.Let (Ident.Ident "tup") tupDef (Term.For (Ident.Ident "i") (Range.Range 0 10 (by decide)) (Term.Place (PlaceExpr.Ident (Ident.Ident "tup")))))
+#eval exLast
+#eval term [] exLast
