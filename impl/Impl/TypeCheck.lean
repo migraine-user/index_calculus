@@ -12,8 +12,9 @@ def term (tyEnv:TyEnv)(t:Term) : Option Ty :=
     | Ty.Data elemTy => pure (Ty.Data (DataTy.Array (r-l) elemTy))
     | _ => none
   | Term.Let id tDef tBody => do
-    let tyDef <- term tyEnv tDef
-    term ((id, tyDef)::tyEnv) tBody
+    match term tyEnv tDef with
+    | Ty.Data dty => term ((id, Ty.Data dty)::tyEnv) tBody
+    | _ => none
   | Term.Tuple t1 t2 =>
     do
       let ty1 <- term tyEnv t1
@@ -28,19 +29,29 @@ def findDef (tyEnv:TyEnv)(x:Ident) : Option Ty :=
   | [] => none
 
 
+def indexTerm (tyEnv: TyEnv) (t:Term) : Option Indexable :=
+  match t with
+  | Term.NatLit n => Indexable.Index n
+  | t => do
+    let ty <- term tyEnv t
+    match ty with
+    | Ty.Range r => Indexable.Range r
+    | _ => none
+
+
 def indexExpr (tyEnv: TyEnv)(t:IndexExpr) : Option DataTy := do
-  let ⟨_placeExpr, indexTerm⟩ := t
+  let ⟨_placeExpr, _indexTerm⟩ := t
   let placeTy <- placeExpr tyEnv _placeExpr
-  let tyIndex <- term tyEnv indexTerm
+  let tyIndex <- indexTerm tyEnv _indexTerm
   match placeTy with
   | DataTy.Array n dty =>
     match tyIndex with
-    | Ty.Nat i => if i <= n then some dty else none
-    | Ty.Range rnge =>
+    | Indexable.Index i => if i <= n then some dty else none
+    | Indexable.Range rnge =>
       let ⟨_,r,_⟩ := rnge
       if r <= n then some dty else none
-    | _ => none
   | _ => none
+
 def placeExpr (tyEnv:TyEnv)(t:PlaceExpr) : Option DataTy :=
   match t with
   | PlaceExpr.Ident id => do
