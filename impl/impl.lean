@@ -1,6 +1,5 @@
 inductive Range: Type
-| One(a:Nat)(b:Nat)(p:a≤b)
-| Cons(a:Nat)(b:Nat)(p:a≤b)(cdr: Range)
+| Range(a:Nat)(b:Nat)(p:a≤b)
 
 inductive DataTy: Type
 | Float
@@ -21,7 +20,6 @@ inductive Ident: Type
 inductive PlaceExpr: Type
 | Ident: Ident -> PlaceExpr
 | Index: PlaceExpr -> Indexable -> PlaceExpr
-| Slice: PlaceExpr -> Range -> PlaceExpr
 | Fst: PlaceExpr -> PlaceExpr
 | Snd: PlaceExpr -> PlaceExpr
 
