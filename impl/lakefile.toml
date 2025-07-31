@@ -1,0 +1,10 @@
+name = "impl"
+version = "0.1.0"
+defaultTargets = ["impl"]
+
+[[lean_lib]]
+name = "Impl"
+
+[[lean_exe]]
+name = "impl"
+root = "Main"
