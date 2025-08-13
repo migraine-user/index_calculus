@@ -10,7 +10,8 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t)$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t subset.eq t "then" t "else" t$
+
 - $i$ and $x$ are identifiers.
 == Literal
 $"fl" ::= 0.0 bar -4.21 bar 523.215 bar ...$
@@ -141,6 +142,25 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
 }
 
+// T-IF
+#{
+  let premises = (
+    $Gamma tack t_l : eta_"l0" .. eta_"l1"$,
+    $Gamma tack t_r: eta_"r0".. eta_"r1"$,
+    $Gamma, (t_l: eta_"l0" .. eta_"l1" and eta_"r0".. eta_"r1" ) tack t_"if":sigma_"if"$,
+    $(r_0,r_1) = eta_"l0" .. eta_"l1" \/ eta_"r0".. eta_"r1"$,
+    $Gamma, (t_l: r_0 ) tack t_"else":sigma_"else0"$,
+    $Gamma, (t_l: r_1 ) tack t_"else":sigma_"else1"$,
+    $sigma = sigma_"if" = sigma_"else0" = sigma_"else1"$,
+  )
+  let conclusion = $Gamma tack "if" t_l subset.eq t_r "then" t_"if" "else" t_"else" : sigma$
+  let _rule = rule(
+    name: "T-IF",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
 #align(left)[= Well-formedness rules]
 // W-RANGE-ONE
 #{
@@ -157,9 +177,17 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 }
 
 #align(left)[= Auxillary definitions]
-$"refine_branches"(Gamma,c) = cases()$
+$forall eta_i in bb(N), "empty" = eta_i..eta_i$
 
-$"refine_eq"(Gamma, t_1, t_2) = cases(("nat", "nat") "if" Gamma tack t_1 : "nat" or Gamma t_2: "nat",)$
+$eta_"l0"..eta_"l1" and eta_"r0".. eta_"r1" =
+cases(max(eta_"l0", eta_"r0")..min(eta_"l1", eta_"l2") "if" max(eta_"l0", eta_"r0")..min(eta_"l1", eta_"l2"):"ok", "empty" "otherwise")$
+
+$"mkRng"(eta_l, eta_r)= cases(
+  eta_l..eta_r "if" eta_l..eta_r:"ok",
+  "empty" "otherwise"
+)$
+
+$eta_"l0"..eta_"l1" \/ eta_"r0".. eta_"r1" = ("mkRng"(eta_"l0".. eta_"r0"), "mkRng"(eta_"l1"..eta_"r1"))$
 
 
 
