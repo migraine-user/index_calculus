@@ -1,15 +1,16 @@
 #import "@preview/curryst:0.5.1": prooftree, rule
+#set text(size: 14pt)
 = Grammar
 == Base Type
 $tau ::= sigma bar r$
 
-$sigma ::= italic("float") bar sigma times sigma bar eta dot sigma$
+$sigma ::= #[float] bar sigma times sigma bar eta dot sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x = t "in" t bar (t,t)$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t)$
 - $i$ and $x$ are identifiers.
 == Literal
 $"fl" ::= 0.0 bar -4.21 bar 523.215 bar ...$
@@ -73,7 +74,7 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
     $Gamma tack t:sigma$,
     $Gamma,(x:sigma) tack t_"body":sigma_"body"$,
   )
-  let conclusion = $Gamma tack "let" x=t "in" t_"body" : sigma_"body"$
+  let conclusion = $Gamma tack "let" x:=t "in" t_"body" : sigma_"body"$
 
   let _rule = rule(name: [T-LET], conclusion, ..premises)
 
@@ -92,19 +93,6 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
     name: "T-FOR",
     conclusion,
     ..premises,
-  )
-  prooftree(_rule)
-}
-
-//T-INDEX-NAT
-#{
-  let premise = $Gamma tack t[eta..(eta+1)]$
-
-  let conclusion = $Gamma tack t[eta] : sigma$
-  let _rule = rule(
-    name: "T-INDEX-NAT",
-    conclusion,
-    premise,
   )
   prooftree(_rule)
 }
@@ -145,6 +133,13 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   prooftree(_rule)
 }
 
+// T-NAT
+#{
+  let _rule = rule(
+    name: "T-NAT",
+    $eta:eta..eta+1$,
+  )
+}
 
 #align(left)[= Well-formedness rules]
 // W-RANGE-ONE
@@ -161,6 +156,13 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   prooftree(_rule)
 }
 
+#align(left)[= Auxillary definitions]
+$"refine_branches"(Gamma,c) = cases()$
+
+$"refine_eq"(Gamma, t_1, t_2) = cases(("nat", "nat") "if" Gamma tack t_1 : "nat" or Gamma t_2: "nat",)$
+
+
+
 #set align(left)
 #pagebreak()
 = Examples
@@ -171,13 +173,13 @@ for i: (0..5) in
     for k: (0..7) in
       4.2
 ```
-This results in a value of type $5 dot 6 dot 7 dot italic("float")$
+This results in a value of type $5 dot 6 dot 7 dot #[float]$
 ```scala
 for i : 0..5 in
   for j: 0..10 in
     1.2
 ```
-This results in a value of type $5 dot 10 dot italic("float")$
+This results in a value of type $5 dot 10 dot #[float]$
 == Indexing by a value of type range
 ```scala
 for i: 0..5 in
@@ -203,7 +205,7 @@ for i: 0..2 in
   for j: 0..1 in
     arr[i][j]
 ```
-This is of type $2dot 1 dot italic("float")$
+This is of type $2dot 1 dot #[float]$
 
 == let in, for, and tuple
 === tuple
@@ -218,7 +220,7 @@ let arr_2 =
       arr_1[i][j] in
 (arr_1, arr_2)
 ```
-This is of type $(5 dot 5 dot italic("float")) times (2 dot 2 dot italic("float"))$
+This is of type $(5 dot 5 dot #[float]) times (2 dot 2 dot #[float])$
 
 === Nested tuple/array
 ```ocaml
@@ -226,4 +228,4 @@ let tup = (3.14159, for i : 0..5 in 6.25) in
   for i : 0..10 in
     tup
 ```
-This is of type $10 dot (italic("float") times (5 dot italic("float")))$
+This is of type $10 dot (#[float] times (5 dot #[float]))$
