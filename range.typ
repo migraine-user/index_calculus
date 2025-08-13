@@ -65,7 +65,11 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
     $"op" in {+,-,*,\/}$,
   )
   let conclusion = $Gamma tack t_l "op" t_r : "float"$
-  let _rule = rule(name: [T-ARITH], conclusion, ..premises)
+  let _rule = rule(
+    name: [T-ARITH],
+    conclusion,
+    ..premises,
+  )
   prooftree(_rule)
 }
 // T -VAR
