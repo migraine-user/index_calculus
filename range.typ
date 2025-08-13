@@ -10,7 +10,7 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t subset.eq t "then" t "else" t$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t subset.eq t "then" t "else" t bar t + t bar t * t bar t - t bar t \/t$
 
 - $i$ and $x$ are identifiers.
 == Literal
@@ -57,6 +57,17 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 }
 #set align(center)
 
+// T-ARITH
+#{
+  let premises = (
+    $Gamma tack t_l: "float"$,
+    $Gamma tack t_r: "float"$,
+    $"op" in {+,-,*,\/}$,
+  )
+  let conclusion = $Gamma tack t_l "op" t_r : "float"$
+  let _rule = rule(name: [T-ARITH], conclusion, ..premises)
+  prooftree(_rule)
+}
 // T -VAR
 #{
   let premises = (
