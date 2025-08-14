@@ -101,9 +101,10 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-FOR
 #{
   let premises = (
-    $Gamma,(i:r) tack t_"body" : sigma$,
+    $r^prime = "mkRng"(eta_l..eta_r)$,
+    $Gamma,(i:r^prime) tack t_"body" : sigma$,
   )
-  let conclusion = $Gamma tack "for" i: r "in" t_"body" : "length"(r) dot sigma$
+  let conclusion = $Gamma tack "for" i: eta_l..eta_r "in" t_"body" : "length"(r^prime) dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,
@@ -133,6 +134,15 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   let conclusion = $Gamma tack t[t_"index"] : sigma$
   let _rule = rule(name: "T-INDEX-RANGE-EMPTY", conclusion, ..premises)
   prooftree(_rule)
+}
+
+// T-NAT
+#{
+  let conclusion = $Gamma tack eta : eta..eta$
+  prooftree(rule(
+    name: "T-NAT",
+    conclusion,
+  ))
 }
 
 // T-FST
@@ -192,7 +202,7 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 = Auxillary definitions
 
 #pseudocode-list[
-  mkRng($eta_l$, $eta_r$) = *if* $0 <= eta_l <= eta_r$ *then* $eta_l..eta_r$ *else* empty
+  mkRng($eta_l$..$eta_r$) = *if* $0 <= eta_l <= eta_r$ *then* $eta_l..eta_r$ *else* empty
 ]
 
 #pseudocode-list[
