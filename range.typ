@@ -1,4 +1,5 @@
 #import "@preview/curryst:0.5.1": prooftree, rule
+#import "@preview/lovelace:0.3.0": pseudocode-list
 #set text(size: 14pt)
 = Grammar
 == Base Type
@@ -8,7 +9,7 @@ $sigma ::= #[float] bar sigma times sigma bar eta dot sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
-$r::= eta..eta$
+$r::= eta..eta bar "empty"$
 = Term
 $t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t subset.eq t "then" t "else" t bar t + t bar t * t bar t - t bar t \/t$
 
@@ -100,11 +101,9 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-FOR
 #{
   let premises = (
-    $r = eta_1 ..eta_2$,
-    $r:"ok"$,
     $Gamma,(i:r) tack t_"body" : sigma$,
   )
-  let conclusion = $Gamma tack "for" i: r "in" t_"body" : (eta_2 -eta_1) dot sigma$
+  let conclusion = $Gamma tack "for" i: r "in" t_"body" : "length"(r) dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,
@@ -118,10 +117,21 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   let premises = (
     $Gamma tack t : eta_(t) dot sigma$,
     $Gamma tack t_("index") : eta_(l)..eta_(r)$,
-    $eta_(r) <= eta_(t)$,
+    $eta_(r) < eta_(t)$,
   )
   let conclusion = $Gamma tack t[t_"index"]: sigma$
   let _rule = rule(name: "T-INDEX-RANGE", conclusion, ..premises)
+  prooftree(_rule)
+}
+
+// T-INDEX-RANGE-EMPTY
+#{
+  let premises = (
+    $Gamma tack t_"index": "empty"$,
+    $Gamma tack t :eta_t dot sigma$,
+  )
+  let conclusion = $Gamma tack t[t_"index"] : sigma$
+  let _rule = rule(name: "T-INDEX-RANGE-EMPTY", conclusion, ..premises)
   prooftree(_rule)
 }
 
@@ -160,10 +170,10 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-IF
 #{
   let premises = (
-    $Gamma tack t_l : eta_"l0" .. eta_"l1"$,
-    $Gamma tack t_r: eta_"r0".. eta_"r1"$,
-    $Gamma, (t_l: eta_"l0" .. eta_"l1" and eta_"r0".. eta_"r1" ) tack t_"if":sigma_"if"$,
-    $(r_0,r_1) = eta_"l0" .. eta_"l1" \/ eta_"r0".. eta_"r1"$,
+    $Gamma tack t_l : r_l$,
+    $Gamma tack t_r: r_r$,
+    $Gamma, (t_l: r_l inter r_r ) tack t_"if":sigma_"if"$,
+    $(r_0,r_1) = r_l \/ r_r$,
     $Gamma, (t_l: r_0 ) tack t_"else":sigma_"else0"$,
     $Gamma, (t_l: r_1 ) tack t_"else":sigma_"else1"$,
     $sigma = sigma_"if" = sigma_"else0" = sigma_"else1"$,
@@ -176,33 +186,37 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
-#align(left)[= Well-formedness rules]
-// W-RANGE-ONE
-#{
-  let premises = (
-    $eta_1 <= eta_2$,
-  )
-  let conclusion = $eta_1 .. eta_2 : "ok"$
-  let _rule = rule(
-    name: "W-RANGE",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
+#pagebreak()
 
-#align(left)[= Auxillary definitions]
-$forall eta_i in bb(N), "empty" = eta_i..eta_i$
+#set align(left)
+= Auxillary definitions
 
-$eta_"l0"..eta_"l1" and eta_"r0".. eta_"r1" =
-cases(max(eta_"l0", eta_"r0")..min(eta_"l1", eta_"l2") "if" max(eta_"l0", eta_"r0")..min(eta_"l1", eta_"l2"):"ok", "empty" "otherwise")$
+#pseudocode-list[
+  mkRng($eta_l$, $eta_r$) = *if* $0 <= eta_l <= eta_r$ *then* $eta_l..eta_r$ *else* empty
+]
 
-$"mkRng"(eta_l, eta_r)= cases(
-  eta_l..eta_r "if" eta_l..eta_r:"ok",
-  "empty" "otherwise"
-)$
+#pseudocode-list[
+  - length($r$) = *match* r *with*
+    - empty $=>$ 0
+    - $eta_l..eta_r$ $=>$ $eta_r - eta_l + 1$
+]
 
-$eta_"l0"..eta_"l1" \/ eta_"r0".. eta_"r1" = ("mkRng"(eta_"l0".. eta_"r0"), "mkRng"(eta_"l1"..eta_"r1"))$
+#pseudocode-list[
+  - $r_l inter r_r$ = *match* $(r_l, r_r)$ *with*
+    - (empty,\_) $=>$ empty
+    - (\_,empty) $=>$ empty
+    - ($eta_"l0"..eta_"l1", eta_"r0"..eta_"r1"$) $=>$ $"mkRng"(max(eta_"l0", eta_"r0"), min(eta_"l1", eta_"r1"))$
+
+]
+
+
+#pseudocode-list[
+  - $r_l \/ r_r$ = *match* $r_l inter r_r$ *with*
+    - empty $=>$ $(r_l, "empty")$
+    - $eta_0..eta_1$ $=>$ *match* $r_l$ *with*
+      - $eta_"l0"..eta_"l1"$ $=>$ (mkRng($eta_"l0", eta_0-1$), mkRng($eta_1+1, eta_"l1"$))
+      - \_ $=>$ *unreachable*
+]
 
 
 
