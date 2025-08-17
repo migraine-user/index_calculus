@@ -1,47 +1,63 @@
-inductive Range: Type
-| Range(a:Nat)(b:Nat)(p:a≤b)
-deriving Repr
-
-inductive DataTy: Type
-| Float
-| Tuple: DataTy -> DataTy -> DataTy
-| Array: Nat -> DataTy -> DataTy
-deriving Repr
-
-inductive Ty: Type
-| Range: Range -> Ty
-| Data: DataTy -> Ty
-deriving Repr
-
-inductive Indexable: Type
-| Index: Nat -> Indexable
-| Range: Range -> Indexable
-deriving Repr
-
-inductive Ident: Type
-| Ident: String -> Ident
-deriving BEq, Repr
+import Lean
 
 mutual
-inductive PlaceExpr: Type
-| Ident: Ident -> PlaceExpr
-| Index: IndexExpr -> PlaceExpr
-| Fst: PlaceExpr -> PlaceExpr
-| Snd: PlaceExpr -> PlaceExpr
+-- Base Type
+inductive Ty: Type
+| range: Range -> Ty
+| data: DataTy -> Ty
+deriving BEq, Repr
+
+-- σ
+inductive DataTy: Type
+| float
+| tuple: DataTy -> DataTy -> DataTy
+| array: Nat -> DataTy -> DataTy
 deriving Repr
 
-inductive IndexExpr : Type
-| Index: PlaceExpr -> Term -> IndexExpr
+-- Range
+inductive Range: Type
+| range(l:Nat)(r:Nat)
+| empty
 deriving Repr
+
+
+inductive Ident: Type
+| ident: String -> Ident
+deriving BEq, Repr
+
+inductive Contains: Type
+| comp(lhs:Ident)(rhs:Term)
+deriving Repr
+
+inductive Arith: Type
+| plus
+| minus
+| times
+| divide
 
 inductive Term: Type
-| FloatLit: Float -> Term
-| NatLit: Nat -> Term
-| Place: PlaceExpr -> Term
-| For: Ident -> Range -> Term -> Term
-| Let: Ident -> Term -> Term -> Term
-| Tuple: Term -> Term -> Term
+| floatLit: Float -> Term
+| natLit: Nat -> Term
+| place: PlaceExpr -> Term
+| for_(i:Ident)(r: Range)(body: Term)
+| let_(x:Ident)(t:Term)(in_t: Term)
+| tuple(fst: Term)(snd: Term)
+| ternary(cond: Contains)(if_body: Term)(else_body: Term)
+| binary(lhs : Term)(op: Arith)(rhs: Term)
 deriving Repr
+
+inductive PlaceExpr: Type
+| ident: Ident -> PlaceExpr
+| index: IndexExpr -> PlaceExpr
+| fst: PlaceExpr -> PlaceExpr
+| snd: PlaceExpr -> PlaceExpr
+deriving Repr
+
+structure IndexExpr where
+    place: PlaceExpr
+    index: Term
+deriving Repr
+
 end
 
 def TyEnv := List (Ident × Ty)

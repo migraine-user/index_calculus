@@ -180,15 +180,15 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-IF
 #{
   let premises = (
-    $Gamma tack t_l : r_l$,
+    $Gamma tack i : r_l$,
     $Gamma tack t_r: r_r$,
-    $Gamma, (t_l: r_l inter r_r ) tack t_"if":sigma_"if"$,
+    $Gamma, (i: r_l inter r_r ) tack t_"if":sigma_"if"$,
     $(r_0,r_1) = r_l \/ r_r$,
-    $Gamma, (t_l: r_0 ) tack t_"else":sigma_"else0"$,
-    $Gamma, (t_l: r_1 ) tack t_"else":sigma_"else1"$,
+    $Gamma, (i: r_0 ) tack t_"else":sigma_"else0"$,
+    $Gamma, (i: r_1 ) tack t_"else":sigma_"else1"$,
     $sigma = sigma_"if" = sigma_"else0" = sigma_"else1"$,
   )
-  let conclusion = $Gamma tack "if" t_l subset.eq t_r "then" t_"if" "else" t_"else" : sigma$
+  let conclusion = $Gamma tack "if" i subset.eq t_r "then" t_"if" "else" t_"else" : sigma$
   let _rule = rule(
     name: "T-IF",
     conclusion,
@@ -202,7 +202,9 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 = Auxillary definitions
 
 #pseudocode-list[
-  mkRng($eta_l$..$eta_r$) = *if* $0 <= eta_l <= eta_r$ *then* $eta_l..eta_r$ *else* empty
+  - mkRng(r)  = *match* r *with*
+    - $eta_l$..$eta_r$ $=>$ *if* $0 <= eta_l <= eta_r$ *then* $eta_l..eta_r$ *else* empty
+    - empty $=>$ empty
 ]
 
 #pseudocode-list[

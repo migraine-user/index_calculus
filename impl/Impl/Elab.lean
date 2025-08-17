@@ -1,38 +1,39 @@
 import Impl.Syntax
+import Impl.TypeCheck
 open Lean Elab Meta Term Syntax
 
 declare_syntax_cat _term
-declare_syntax_cat arith
 declare_syntax_cat place
 declare_syntax_cat range
+declare_syntax_cat bin_op
 
 -- entry
 syntax "(lang|" _term ")" : term
 
-syntax  arith : _term
 syntax  num: _term
-syntax  place: _term
 syntax "for " ident " : " range " in " _term: _term
 syntax "let " ident " := " _term " in " _term: _term
 syntax "(" _term ", " _term ")" : _term
-syntax "if " _term " ⊆ " _term " then " _term " else " _term: _term
+syntax "if " ident " ⊆ " _term " then " _term " else " _term: _term
 
 syntax num"⋯"num: range
 syntax "empty" : range
-syntax scientific : arith
-declare_syntax_cat bin_op
 syntax " + ": bin_op
 syntax " * ": bin_op
 syntax " - ": bin_op
 syntax " / ": bin_op
-syntax arith bin_op arith : arith
-syntax "(" arith ")" : arith
 
-syntax  ident : place
-syntax  place "["_term"]" : place
-syntax  place:50 ".fst" : place
-syntax  place:50 ".snd" : place
+syntax ident : place
+syntax place "[" _term "]" : place
+syntax place ".fst" : place
+syntax place ".snd" : place
 
+syntax place : _term
+
+syntax scientific: _term
+syntax _term bin_op _term: _term
+
+syntax "(" _term ")" : _term
 
 def mkFloatLit (x : Nat × Bool × Nat)  : Expr :=
   let (n, b, m) := x
@@ -43,30 +44,7 @@ def mkFloatLit (x : Nat × Bool × Nat)  : Expr :=
   else
     mkApp3 (mkConst ``Float.ofScientific []) n (.const ``Bool.false []) m
 
-partial def elabArith : Syntax -> MetaM Expr
-  | `(arith| $f:scientific) => mkAppM ``floatLit #[mkFloatLit f.getScientific]
-  | `(arith| $a:arith $op:bin_op $b:arith) => do
-    let aa <- elabArith a
-    let bb <- elabArith b
-    let op <- match op with
-    | `(bin_op| + ) => pure ``Arith.plus
-    | `(bin_op| - ) => pure ``Arith.minus
-    | `(bin_op| / ) => pure ``Arith.divide
-    | `(bin_op| * ) => pure ``Arith.times
-    | _ => throwUnsupportedSyntax
-    return (mkApp3
-    (mkConst ``Term.binary [])
-    aa
-    (mkConst op [])
-    bb)
-  | `(arith| ($a:arith)) => do
-    elabArith a
-  | _ => throwUnsupportedSyntax
 
-elab "test_elabArith" t:arith : term => elabArith t
-
-#reduce test_elabArith (5.2 + 2.1)
-#eval test_elabArith (5.2 + 2.1)
 mutual
 partial def elabRange : Syntax -> MetaM Expr
   | `(range| empty ) => pure $ mkConst ``Range.empty []
@@ -80,11 +58,28 @@ partial def elabRange : Syntax -> MetaM Expr
 
 
 partial def elabTerm : Syntax -> MetaM Expr
-  | `(_term| $a:arith) => elabArith a
-  | `(_term| $n:num) => pure $ Lean.mkApp (mkConst ``Term.natLit []) (mkNatLit n.getNat)
+  | `(_term| ($t:_term)) => elabTerm t
+  | `(_term| $f:scientific) => mkAppM ``floatLit #[mkFloatLit f.getScientific]
+  | `(_term| $a:_term $op:bin_op $b:_term) => do
+    let aa <- elabTerm a
+    let bb <- elabTerm b
+    let op <- match op with
+    | `(bin_op| + ) => pure ``Arith.plus
+    | `(bin_op| - ) => pure ``Arith.minus
+    | `(bin_op| / ) => pure ``Arith.divide
+    | `(bin_op| * ) => pure ``Arith.times
+    | _ => throwUnsupportedSyntax
+    return (mkApp3
+    (mkConst ``Term.binary [])
+    aa
+    (mkConst op [])
+    bb)
   | `(_term| $p:place) => do
     let p <- elabPlace p
     mkAppM ``Term.place #[p]
+  | `(_term| $n:num) => do
+    let n := Lean.mkNatLit n.getNat
+    mkAppM ``Term.natLit #[n]
   | `(_term| ( $l, $r) ) => do
     let l <- elabTerm l
     let r <- elabTerm r
@@ -94,12 +89,12 @@ partial def elabTerm : Syntax -> MetaM Expr
     let t <- elabTerm t
     let t_in <- elabTerm t_in
     pure $ mkApp3 (mkConst ``Term.let_ []) x t t_in
-  | `(_term| if $l ⊆ $r then $t_if else $t_else) => do
-    let l <- elabTerm l
+  | `(_term| if $l:ident ⊆ $r:_term then $t_if:_term else $t_else:_term) => do
+    let i := Lean.mkApp (mkConst ``Ident.ident []) (l.getId.toString |> mkStrLit)
     let r <- elabTerm r
     let t_if <- elabTerm t_if
     let t_else <- elabTerm t_else
-    let cond := mkApp2 (mkConst ``Contains.comp []) l r
+    let cond := mkApp2 (mkConst ``Contains.comp []) i r
     mkAppM ``Term.ternary #[cond, t_if, t_else]
   | `(_term| for $i : $r in $t) => do
     let i := Lean.mkApp (mkConst ``Ident.ident []) (i.getId.toString |> Lean.mkStrLit)
@@ -123,10 +118,86 @@ partial def elabPlace : Syntax -> MetaM Expr
       pure $ mkApp (mkConst ``PlaceExpr.fst []) inner
   | `(place| $p:place .snd) => do
     let inner <- elabPlace p
-    pure $ mkApp (mkConst ``PlaceExpr.fst []) inner
+    pure $ mkApp (mkConst ``PlaceExpr.snd []) inner
   | _ => throwUnsupportedSyntax
+
 end
+#eval `(place| a[1])
+#check `( _term| 1 )
+elab "test_elabPlace" t:place : term => elabPlace t
+#eval test_elabPlace a[1]
 elab "test_elabRange" t:range : term => elabRange t
+
 #eval test_elabRange 1⋯2
 elab "test_elabTerm" t:_term : term => elabTerm t
 #eval test_elabTerm let x:=1 in for i : 1⋯2 in x[1]
+elab "(lang|" t:_term ")" : term => elabTerm t
+
+#eval (lang| let x:=1 in for i : 1⋯2 in x)
+#eval (lang|
+  if x ⊆ y then 1.1 else 0.0
+)
+#eval true && true
+#eval term [] (lang|
+  for x : 0⋯2 in 1.2
+)
+#eval term [] (lang|
+  for i : 0⋯2 in
+    for j : 0⋯2 in
+      if i ⊆ 0 then
+        if j ⊆ i then
+          1.0
+        else
+          0.0
+      else if i ⊆ 1 then
+        if j ⊆ i then
+          1.0
+        else
+          0.0
+      else if i ⊆ 2 then
+        if j ⊆ i then
+          1.0
+        else
+          0.0
+      else 0.0
+)
+
+#eval term [] (lang|
+  let x := for j : 0⋯2 in 1.0 in
+  for i : 0⋯2 in
+    for j : 0⋯2 in
+      if i ⊆ 0 then
+        if j ⊆ i then
+          x[i]
+        else
+          0.0
+      else if i ⊆ 1 then
+        if j ⊆ i then
+          1.0
+        else
+          0.0
+      else if i ⊆ 2 then
+        if j ⊆ i then
+          1.0
+        else
+          0.0
+      else 0.0
+)
+
+#eval term [] (lang|
+  let arr := for i : 0⋯4 in
+    for j : 0⋯4 in
+      3.14159
+  in for i : 0⋯2 in
+    for j : 0⋯1 in
+      (arr[i][j], arr[i][j])
+)
+
+#eval term [] (lang|
+  let arr := for i : 0⋯4 in
+    for j : 0⋯4 in
+      3.14159
+  in for i : 0⋯2 in
+    for j : 0⋯1 in
+      (arr[i][j] + arr[i][j], arr[i][j] + arr[i][j])
+)
