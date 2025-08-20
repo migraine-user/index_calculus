@@ -56,8 +56,6 @@ partial def elabRange : Syntax -> MetaM Expr
     (mkNatLit b.getNat)
   | _ => throwUnsupportedSyntax
 
--- #check elabTerm
-
 partial def elabTerm : Syntax -> MetaM Expr
   | `(_term| ($t:_term)) => elabTerm t
   | `(_term| $f:scientific) => mkAppM ``floatLit #[mkFloatLit f.getScientific]
@@ -214,7 +212,7 @@ elab "(lang|" t:_term ")" : term => elabTerm t
 
 def ex := run [] (lang|
   let arr := for i : 0⋯4 in
-    for j : 0⋯4 in
+    for j : 2⋯4 in
       3.14159
   in for i : 0⋯2 in
     for j : 0⋯1 in

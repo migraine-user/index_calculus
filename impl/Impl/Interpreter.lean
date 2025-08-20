@@ -5,7 +5,12 @@ inductive RunVal: Type
 | array (arr: List RunVal)
 | tuple (fst:RunVal)(snd:RunVal)
 deriving Repr
-
+instance : Repr RunVal where
+  reprPrec x prec :=
+    let s := Repr.reprPrec x prec |> toString  -- calls the derived one internally
+    let kill enemy := fun s =>
+      s.replace enemy ""
+    s |> kill "RunVal.array" |> kill "RunVal.tuple" |> kill "RunVal.float"
 abbrev RunResult := Except String RunVal
 
 def RunEnv := List (Ident × RunVal)
@@ -86,4 +91,3 @@ def run(env: RunEnv)(t:Term) : RunResult :=
       | .divide => lhs / rhs
     | _ => .error "binary op on non-floats"
 end
--- #eval List.range'

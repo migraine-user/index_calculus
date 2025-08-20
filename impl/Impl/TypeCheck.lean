@@ -94,3 +94,5 @@ partial def place (tyEnv: TyEnv) (p:PlaceExpr) : TyResult :=
     | .data $ .tuple fst snd => .ok $ .data snd
     | _ => .error "not a tuple"
 end
+
+--
