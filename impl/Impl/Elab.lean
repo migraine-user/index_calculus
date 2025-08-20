@@ -1,3 +1,4 @@
+import Impl.Interpreter
 import Impl.Syntax
 import Impl.TypeCheck
 open Lean Elab Meta Term Syntax
@@ -14,7 +15,7 @@ syntax  num: _term
 syntax "for " ident " : " range " in " _term: _term
 syntax "let " ident " := " _term " in " _term: _term
 syntax "(" _term ", " _term ")" : _term
-syntax "if " ident " ⊆ " _term " then " _term " else " _term: _term
+syntax "if " ident " ≤  " num " then " _term " else " _term: _term
 
 syntax num"⋯"num: range
 syntax "empty" : range
@@ -55,7 +56,7 @@ partial def elabRange : Syntax -> MetaM Expr
     (mkNatLit b.getNat)
   | _ => throwUnsupportedSyntax
 
-
+-- #check elabTerm
 
 partial def elabTerm : Syntax -> MetaM Expr
   | `(_term| ($t:_term)) => elabTerm t
@@ -80,6 +81,9 @@ partial def elabTerm : Syntax -> MetaM Expr
   | `(_term| $n:num) => do
     let n := Lean.mkNatLit n.getNat
     mkAppM ``Term.natLit #[n]
+  | `(num| $n:num) => do
+    let n := Lean.mkNatLit n.getNat
+    mkAppM ``Term.natLit #[n]
   | `(_term| ( $l, $r) ) => do
     let l <- elabTerm l
     let r <- elabTerm r
@@ -89,19 +93,19 @@ partial def elabTerm : Syntax -> MetaM Expr
     let t <- elabTerm t
     let t_in <- elabTerm t_in
     pure $ mkApp3 (mkConst ``Term.let_ []) x t t_in
-  | `(_term| if $l:ident ⊆ $r:_term then $t_if:_term else $t_else:_term) => do
+  | `(_term| if $l:ident ≤  $r:num then $t_if:_term else $t_else:_term) => do
     let i := Lean.mkApp (mkConst ``Ident.ident []) (l.getId.toString |> mkStrLit)
     let r <- elabTerm r
     let t_if <- elabTerm t_if
     let t_else <- elabTerm t_else
-    let cond := mkApp2 (mkConst ``Contains.comp []) i r
+    let cond := mkApp2 (mkConst ``Leq.leq []) i r
     mkAppM ``Term.ternary #[cond, t_if, t_else]
   | `(_term| for $i : $r in $t) => do
     let i := Lean.mkApp (mkConst ``Ident.ident []) (i.getId.toString |> Lean.mkStrLit)
     let r <- elabRange r
     let t <- elabTerm t
     mkAppM ``Term.for_ #[i, r, t]
-  | _ => throwUnsupportedSyntax
+  | s => throwError (toString s)
 partial def elabPlace : Syntax -> MetaM Expr
   | `(place| $p:ident) =>
     let strLit := p.getId.toString |> Lean.mkStrLit
@@ -135,49 +139,46 @@ elab "(lang|" t:_term ")" : term => elabTerm t
 
 #eval (lang| let x:=1 in for i : 1⋯2 in x)
 #eval (lang|
-  if x ⊆ y then 1.1 else 0.0
+  if x ≤ 0 then 1.1 else 0.0
 )
 #eval true && true
-#eval term [] (lang|
+#eval (lang|
   for x : 0⋯2 in 1.2
 )
+#eval (lang|
+  for i : 0⋯2 in
+    for j : 0⋯2 in
+      if i ≤  0 then
+        if j ≤ 0 then
+          1.0
+        else
+          0.0
+      else if i ≤  1 then
+        if j ≤  1 then
+          1.0
+        else
+          0.0
+      else if i ≤  2 then
+        if j ≤  0 then
+          1.0
+        else
+          0.0
+      else 0.0)
 #eval term [] (lang|
   for i : 0⋯2 in
     for j : 0⋯2 in
-      if i ⊆ 0 then
-        if j ⊆ i then
+      if i ≤  0 then
+        if j ≤ 0 then
           1.0
         else
           0.0
-      else if i ⊆ 1 then
-        if j ⊆ i then
+      else if i ≤  1 then
+        if j ≤  1 then
           1.0
         else
           0.0
-      else if i ⊆ 2 then
-        if j ⊆ i then
-          1.0
-        else
-          0.0
-      else 0.0
-)
-
-#eval term [] (lang|
-  let x := for j : 0⋯2 in 1.0 in
-  for i : 0⋯2 in
-    for j : 0⋯2 in
-      if i ⊆ 0 then
-        if j ⊆ i then
-          x[i]
-        else
-          0.0
-      else if i ⊆ 1 then
-        if j ⊆ i then
-          1.0
-        else
-          0.0
-      else if i ⊆ 2 then
-        if j ⊆ i then
+      else if i ≤  2 then
+        if j ≤  0 then
           1.0
         else
           0.0
@@ -201,3 +202,23 @@ elab "(lang|" t:_term ")" : term => elabTerm t
     for j : 0⋯1 in
       (arr[i][j] + arr[i][j], arr[i][j] + arr[i][j])
 )
+
+#eval term [] (lang|
+  let arr := for i : 0⋯4 in
+    for j : 0⋯4 in
+      3.14159
+  in for i : 0⋯2 in
+    for j : 0⋯1 in
+      (arr, arr[i][j] + arr[i][j])
+)
+
+def ex := run [] (lang|
+  let arr := for i : 0⋯4 in
+    for j : 0⋯4 in
+      3.14159
+  in for i : 0⋯2 in
+    for j : 0⋯1 in
+      (arr, arr[i][j] + arr[i][j])
+)
+
+#eval ex

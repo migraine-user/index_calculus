@@ -11,7 +11,7 @@ $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta bar "empty"$
 = Term
-$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t subset.eq t "then" t "else" t bar t + t bar t * t bar t - t bar t \/t$
+$t ::= "fl" bar eta bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t$
 
 - $i$ and $x$ are identifiers.
 == Literal
@@ -136,13 +136,12 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   prooftree(_rule)
 }
 
-// T-NAT
+// T-INDEX-NAT
 #{
-  let conclusion = $Gamma tack eta : eta..eta$
-  prooftree(rule(
-    name: "T-NAT",
-    conclusion,
-  ))
+  let premises = ($Gamma tack t:eta_t dot sigma$, $eta < eta_t$)
+  let conclusion = $Gamma tack t[eta] : sigma$
+  let _rule = rule(name: "T-INDEX-NAT", conclusion, ..premises)
+  prooftree(_rule)
 }
 
 // T-FST
@@ -177,20 +176,36 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
 }
 
-// T-IF
+//T-IF
 #{
   let premises = (
-    $Gamma tack i : r_l$,
-    $Gamma tack t_r: r_r$,
-    $Gamma, (i: r_l inter r_r ) tack t_"if":sigma_"if"$,
-    $(r_0,r_1) = r_l \/ r_r$,
-    $Gamma, (i: r_0 ) tack t_"else":sigma_"else0"$,
-    $Gamma, (i: r_1 ) tack t_"else":sigma_"else1"$,
-    $sigma = sigma_"if" = sigma_"else0" = sigma_"else1"$,
+    $Gamma tack t:eta_l .. eta_r$,
+    $r_"then" = "mkRng"(eta_l..min(eta, eta_r))$,
+    $r_"else" = "mkRng"(min(eta, eta_r)+1..eta_r)$,
+    $Gamma, (t:r_"then") tack t_"then" sigma_"then"$,
+    $Gamma, (t:r_"else") tack t_"else" sigma_"else"$,
+    $sigma = sigma_"then" = sigma_"else"$,
   )
-  let conclusion = $Gamma tack "if" i subset.eq t_r "then" t_"if" "else" t_"else" : sigma$
+  let conclusion = $Gamma tack "if" t <= eta "then" t_"then" "else" t_"else" : sigma$
   let _rule = rule(
     name: "T-IF",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
+
+//T-IF-EMPTY
+#{
+  let premises = (
+    $Gamma tack t:"empty"$,
+    $Gamma tack t_"then" sigma_"then"$,
+    $Gamma tack t_"else" sigma_"else"$,
+    $sigma = sigma_"then" = sigma_"else"$,
+  )
+  let conclusion = $Gamma tack "if" t <= eta "then" t_"then" "else" t_"else" : sigma$
+  let _rule = rule(
+    name: "T-IF-EMPTY",
     conclusion,
     ..premises,
   )
@@ -213,22 +228,22 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
     - $eta_l..eta_r$ $=>$ $eta_r - eta_l + 1$
 ]
 
-#pseudocode-list[
-  - $r_l inter r_r$ = *match* $(r_l, r_r)$ *with*
-    - (empty,\_) $=>$ empty
-    - (\_,empty) $=>$ empty
-    - ($eta_"l0"..eta_"l1", eta_"r0"..eta_"r1"$) $=>$ $"mkRng"(max(eta_"l0", eta_"r0"), min(eta_"l1", eta_"r1"))$
+// #pseudocode-list[
+//   - $r_l inter r_r$ = *match* $(r_l, r_r)$ *with*
+//     - (empty,\_) $=>$ empty
+//     - (\_,empty) $=>$ empty
+//     - ($eta_"l0"..eta_"l1", eta_"r0"..eta_"r1"$) $=>$ $"mkRng"(max(eta_"l0", eta_"r0"), min(eta_"l1", eta_"r1"))$
 
-]
+// ]
 
 
-#pseudocode-list[
-  - $r_l \/ r_r$ = *match* $r_l inter r_r$ *with*
-    - empty $=>$ $(r_l, "empty")$
-    - $eta_0..eta_1$ $=>$ *match* $r_l$ *with*
-      - $eta_"l0"..eta_"l1"$ $=>$ (mkRng($eta_"l0", eta_0-1$), mkRng($eta_1+1, eta_"l1"$))
-      - \_ $=>$ *unreachable*
-]
+// #pseudocode-list[
+//   - $r_l \/ r_r$ = *match* $r_l inter r_r$ *with*
+//     - empty $=>$ $(r_l, "empty")$
+//     - $eta_0..eta_1$ $=>$ *match* $r_l$ *with*
+//       - $eta_"l0"..eta_"l1"$ $=>$ (mkRng($eta_"l0", eta_0-1$), mkRng($eta_1+1, eta_"l1"$))
+//       - \_ $=>$ *unreachable*
+// ]
 
 
 

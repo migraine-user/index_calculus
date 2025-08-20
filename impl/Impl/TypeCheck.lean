@@ -1,9 +1,9 @@
 import Impl.Syntax
 import Impl.Auxillary
-abbrev Result := Except String Ty
+abbrev TyResult := Except String Ty
 
 mutual
-partial def term (tyEnv: TyEnv) (t:Term) : Result :=
+partial def term (tyEnv: TyEnv) (t:Term) : TyResult :=
   match t with
     | .floatLit _ => .ok $ .data $ .float
     | .natLit n => .ok $ .range $ .range n n
@@ -31,22 +31,21 @@ partial def term (tyEnv: TyEnv) (t:Term) : Result :=
       let lDty <- check lTy
       let rDty <- check rTy
       pure $ .data $ .tuple lDty rDty
-    | .ternary (.comp l r) if_body else_body => do
-      let lTy <- ident tyEnv l
-      let rTy <- term tyEnv r
-      let check := checkRange "must be <range> ⊆ <range>"
-      let lR <- check lTy
-      let rR <- check rTy
-      let (rIf, rElse1, rElse2) := splitSubseteq lR rR
-      let rIf := .range rIf
-      let rElse1 := Ty.range rElse1
-      let rElse2 := Ty.range rElse2
-      let t1 <- term ((l,rIf)::tyEnv) if_body
-      let t2 <- term ((l,rElse1)::tyEnv) else_body
-      let t3 <- term ((l,rElse2)::tyEnv) else_body
-      if t1 == t2 && t2 == t3
+    | .ternary (.leq i t) if_body else_body => do
+      let iTy <- ident tyEnv i
+      let iR <- checkRange "lhs must be a range" iTy
+      let n <- match t with
+      | .natLit m => pure m
+      | _ => .error "rhs must be a natural literal"
+      let (rIf, rElse) : Range × Range := match iR with
+      | .range a b => (mkRng $ .range a n, mkRng $ .range (n+1) b)
+      | .empty => (.empty, .empty)
+      let (rIf, rElse) := (.range rIf, .range rElse)
+      let t1 <- term ((i,rIf)::tyEnv) if_body
+      let t2 <- term ((i,rElse)::tyEnv) else_body
+      if t1 == t2
         then .ok t1
-        else .error "all if branches must have the same type"
+        else .error "the branches must have the same type"
     | .binary l op r => do
       let l <- term tyEnv l
       let r <- term tyEnv r
@@ -63,14 +62,14 @@ partial def checkRange (msg: String)(ty: Ty) : Except String Range :=
   | .data _ => .error msg
   | .range r => .ok r
 
-partial def ident (tyEnv: TyEnv) (i:Ident) : Result :=
+partial def ident (tyEnv: TyEnv) (i:Ident) : TyResult :=
   match tyEnv with
   | (i', ty)::rest => if i == i'
     then .ok ty
     else ident rest i
   | [] => match i with
     | .ident s => .error $ s!"Identifier {s} not found"
-partial def place (tyEnv: TyEnv) (p:PlaceExpr) : Result :=
+partial def place (tyEnv: TyEnv) (p:PlaceExpr) : TyResult :=
   match p with
   | .ident i => ident tyEnv i
   | .index indexExpr => do

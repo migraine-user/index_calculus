@@ -25,8 +25,8 @@ inductive Ident: Type
 | ident: String -> Ident
 deriving BEq, Repr
 
-inductive Contains: Type
-| comp(lhs:Ident)(rhs:Term)
+inductive Leq: Type
+| leq(lhs:Ident)(rhs:Term)
 deriving Repr
 
 inductive Arith: Type
@@ -42,7 +42,7 @@ inductive Term: Type
 | for_(i:Ident)(r: Range)(body: Term)
 | let_(x:Ident)(t:Term)(in_t: Term)
 | tuple(fst: Term)(snd: Term)
-| ternary(cond: Contains)(if_body: Term)(else_body: Term)
+| ternary(cond: Leq)(if_body: Term)(else_body: Term)
 | binary(lhs : Term)(op: Arith)(rhs: Term)
 deriving Repr
 
