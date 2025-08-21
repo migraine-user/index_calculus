@@ -32,8 +32,10 @@ syntax place ".snd" : place
 syntax place : _term
 
 syntax scientific: _term
-syntax _term bin_op _term: _term
-
+syntax:65 _term "+" _term : _term
+syntax:65 _term "-" _term : _term
+syntax:70 _term "*" _term : _term
+syntax:70 _term "/" _term : _term
 syntax "(" _term ")" : _term
 
 def mkFloatLit (x : Nat × Bool × Nat)  : Expr :=
@@ -59,19 +61,37 @@ partial def elabRange : Syntax -> MetaM Expr
 partial def elabTerm : Syntax -> MetaM Expr
   | `(_term| ($t:_term)) => elabTerm t
   | `(_term| $f:scientific) => mkAppM ``floatLit #[mkFloatLit f.getScientific]
-  | `(_term| $a:_term $op:bin_op $b:_term) => do
+  | `(_term| $a:_term + $b:_term) => do
     let aa <- elabTerm a
     let bb <- elabTerm b
-    let op <- match op with
-    | `(bin_op| + ) => pure ``Arith.plus
-    | `(bin_op| - ) => pure ``Arith.minus
-    | `(bin_op| / ) => pure ``Arith.divide
-    | `(bin_op| * ) => pure ``Arith.times
-    | _ => throwUnsupportedSyntax
     return (mkApp3
     (mkConst ``Term.binary [])
     aa
-    (mkConst op [])
+    (mkConst ``Arith.plus [])
+    bb)
+  | `(_term| $a:_term - $b:_term) => do
+    let aa <- elabTerm a
+    let bb <- elabTerm b
+    return (mkApp3
+    (mkConst ``Term.binary [])
+    aa
+    (mkConst ``Arith.minus [])
+    bb)
+  | `(_term| $a:_term * $b:_term) => do
+    let aa <- elabTerm a
+    let bb <- elabTerm b
+    return (mkApp3
+    (mkConst ``Term.binary [])
+    aa
+    (mkConst ``Arith.times [])
+    bb)
+  | `(_term| $a:_term / $b:_term) => do
+    let aa <- elabTerm a
+    let bb <- elabTerm b
+    return (mkApp3
+    (mkConst ``Term.binary [])
+    aa
+    (mkConst ``Arith.divide [])
     bb)
   | `(_term| $p:place) => do
     let p <- elabPlace p
@@ -198,7 +218,7 @@ elab "(lang|" t:_term ")" : term => elabTerm t
       3.14159
   in for i : 0⋯2 in
     for j : 0⋯1 in
-      (arr[i][j] + arr[i][j], arr[i][j] + arr[i][j])
+      (arr[i][j] + arr[i][j], arr[i][j] * arr[i][j])
 )
 
 #eval term [] (lang|
