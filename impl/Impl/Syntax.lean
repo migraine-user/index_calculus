@@ -1,5 +1,6 @@
 import Lean
 
+namespace Syntax
 mutual
 -- Base Type
 inductive Ty: Type
@@ -61,3 +62,4 @@ deriving Repr
 end
 
 def TyEnv := List (Ident × Ty)
+end Syntax

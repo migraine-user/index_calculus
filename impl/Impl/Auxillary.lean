@@ -1,11 +1,11 @@
 import Impl.Syntax
-def mkRng(r:Range): Range :=
+def mkRng(r:Syntax.Range): Syntax.Range :=
   match r with
   | .empty => .empty
   | .range a b => if a <= b then r else .empty
 
 
-def length(r:Range): Nat :=
+def length(r:Syntax.Range): Nat :=
   match r with
   | .empty => 0
   | .range l r => r - l + 1

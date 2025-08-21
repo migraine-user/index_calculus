@@ -38,6 +38,7 @@ syntax:70 _term "*" _term : _term
 syntax:70 _term "/" _term : _term
 syntax "(" _term ")" : _term
 
+
 def mkFloatLit (x : Nat × Bool × Nat)  : Expr :=
   let (n, b, m) := x
   let n := Lean.mkNatLit n
@@ -60,7 +61,7 @@ partial def elabRange : Syntax -> MetaM Expr
 
 partial def elabTerm : Syntax -> MetaM Expr
   | `(_term| ($t:_term)) => elabTerm t
-  | `(_term| $f:scientific) => mkAppM ``floatLit #[mkFloatLit f.getScientific]
+  | `(_term| $f:scientific) => mkAppM ``Syntax.Term.floatLit #[mkFloatLit f.getScientific]
   | `(_term| $a:_term + $b:_term) => do
     let aa <- elabTerm a
     let bb <- elabTerm b
@@ -144,99 +145,7 @@ partial def elabPlace : Syntax -> MetaM Expr
   | _ => throwUnsupportedSyntax
 
 end
-#eval `(place| a[1])
-#check `( _term| 1 )
-elab "test_elabPlace" t:place : term => elabPlace t
-#eval test_elabPlace a[1]
-elab "test_elabRange" t:range : term => elabRange t
-
-#eval test_elabRange 1⋯2
-elab "test_elabTerm" t:_term : term => elabTerm t
-#eval test_elabTerm let x:=1 in for i : 1⋯2 in x[1]
 elab "(lang|" t:_term ")" : term => elabTerm t
 
-#eval (lang| let x:=1 in for i : 1⋯2 in x)
-#eval (lang|
-  if x ≤ 0 then 1.1 else 0.0
-)
-#eval true && true
-#eval (lang|
-  for x : 0⋯2 in 1.2
-)
-#eval (lang|
-  for i : 0⋯2 in
-    for j : 0⋯2 in
-      if i ≤  0 then
-        if j ≤ 0 then
-          1.0
-        else
-          0.0
-      else if i ≤  1 then
-        if j ≤  1 then
-          1.0
-        else
-          0.0
-      else if i ≤  2 then
-        if j ≤  0 then
-          1.0
-        else
-          0.0
-      else 0.0)
-#eval term [] (lang|
-  for i : 0⋯2 in
-    for j : 0⋯2 in
-      if i ≤  0 then
-        if j ≤ 0 then
-          1.0
-        else
-          0.0
-      else if i ≤  1 then
-        if j ≤  1 then
-          1.0
-        else
-          0.0
-      else if i ≤  2 then
-        if j ≤  0 then
-          1.0
-        else
-          0.0
-      else 0.0
-)
-
-#eval term [] (lang|
-  let arr := for i : 0⋯4 in
-    for j : 0⋯4 in
-      3.14159
-  in for i : 0⋯2 in
-    for j : 0⋯1 in
-      (arr[i][j], arr[i][j])
-)
-
-#eval term [] (lang|
-  let arr := for i : 0⋯4 in
-    for j : 0⋯4 in
-      3.14159
-  in for i : 0⋯2 in
-    for j : 0⋯1 in
-      (arr[i][j] + arr[i][j], arr[i][j] * arr[i][j])
-)
-
-#eval term [] (lang|
-  let arr := for i : 0⋯4 in
-    for j : 0⋯4 in
-      3.14159
-  in for i : 0⋯2 in
-    for j : 0⋯1 in
-      (arr, arr[i][j] + arr[i][j])
-)
-
-def ex := run [] (lang|
-  let arr := for i : 0⋯4 in
-    for j : 2⋯4 in
-      3.14159
-  in for i : 0⋯2 in
-    for j : 0⋯1 in
-      (arr, arr[i][j] + arr[i][j])
-)
-
-#eval ex
+def typecheck t := Typecheck.term [] t
+def run t := Interpreter.run [] t

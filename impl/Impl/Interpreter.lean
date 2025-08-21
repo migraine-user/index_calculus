@@ -1,21 +1,19 @@
 import Impl.TypeCheck
+
+namespace Interpreter
 inductive RunVal: Type
 | float (f:Float)
 | nat : Nat -> RunVal
 | array (arr: List RunVal)
 | tuple (fst:RunVal)(snd:RunVal)
+| nothing
 deriving Repr
-instance : Repr RunVal where
-  reprPrec x prec :=
-    let s := Repr.reprPrec x prec |> toString  -- calls the derived one internally
-    let kill enemy := fun s =>
-      s.replace enemy ""
-    s |> kill "RunVal.array" |> kill "RunVal.tuple" |> kill "RunVal.float"
+
 abbrev RunResult := Except String RunVal
 
-def RunEnv := List (Ident × RunVal)
+def RunEnv := List (Syntax.Ident × RunVal)
 mutual
-def run(env: RunEnv)(t:Term) : RunResult :=
+def run(env: RunEnv)(t:Syntax.Term) : RunResult :=
   match t with
   | .floatLit f => .ok $ .float f
   | .natLit n => .ok $ .nat n
@@ -29,6 +27,7 @@ def run(env: RunEnv)(t:Term) : RunResult :=
       | .none => .error "identifier not defined"
       | .some (id,v) => .ok v
     | .index ⟨t,idx⟩ => do
+
       let v <- run env (.place t)
       let i <- run env idx
       let i:RunVal <- match i with
@@ -91,3 +90,26 @@ def run(env: RunEnv)(t:Term) : RunResult :=
       | .divide => lhs / rhs
     | _ => .error "binary op on non-floats"
 end
+end Interpreter
+
+private partial def convert : Interpreter.RunVal -> Std.Format
+  | .nothing => "nothing"
+  | .float f   => repr f
+  | .nat n     => repr n
+  | .array []  => Std.Format.text "[]"
+  | .array (x :: xs) =>
+    let elems := (x :: xs).map (fun e =>
+      match e with
+      | .float _ | .nat _ => convert e
+      | _ => Std.Format.line ++ convert e) -- newline for nested structures
+    Std.Format.text "[" ++ Std.Format.joinSep elems (Std.Format.text ", ") ++ Std.Format.text "]"
+  | .tuple a b =>
+    let left := match a with
+                | .float _ | .nat _ => convert a
+                | _ => Std.Format.line ++ convert a
+    let right := match b with
+                  | .float _ | .nat _ => convert b
+                  | _ => Std.Format.line ++ convert b
+    Std.Format.text "(" ++ left ++ Std.Format.text ", " ++ right ++ Std.Format.text ")"
+instance : Repr Interpreter.RunVal where
+  reprPrec x _ := convert x

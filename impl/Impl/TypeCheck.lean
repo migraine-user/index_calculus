@@ -1,9 +1,11 @@
 import Impl.Syntax
 import Impl.Auxillary
-abbrev TyResult := Except String Ty
+
+namespace Typecheck
+abbrev TyResult := Except String Syntax.Ty
 
 mutual
-partial def term (tyEnv: TyEnv) (t:Term) : TyResult :=
+partial def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
   match t with
     | .floatLit _ => .ok $ .data $ .float
     | .natLit n => .ok $ .range $ .range n n
@@ -37,9 +39,9 @@ partial def term (tyEnv: TyEnv) (t:Term) : TyResult :=
       let n <- match t with
       | .natLit m => pure m
       | _ => .error "rhs must be a natural literal"
-      let (rIf, rElse) : Range × Range := match iR with
-      | .range a b => (mkRng $ .range a n, mkRng $ .range (n+1) b)
-      | .empty => (.empty, .empty)
+      let (rIf, rElse) : Syntax.Range × Syntax.Range := match iR with
+      | Syntax.Range.range a b => (mkRng $ .range a n, mkRng $ .range (n+1) b)
+      | Syntax.Range.empty => (.empty, .empty)
       let (rIf, rElse) := (.range rIf, .range rElse)
       let t1 <- term ((i,rIf)::tyEnv) if_body
       let t2 <- term ((i,rElse)::tyEnv) else_body
@@ -53,23 +55,23 @@ partial def term (tyEnv: TyEnv) (t:Term) : TyResult :=
         then pure $ .data .float
         else .error "arithmetic only supports floats"
 
-partial def checkData (msg: String)(ty: Ty) : Except String DataTy :=
+partial def checkData (msg: String)(ty: Syntax.Ty) : Except String Syntax.DataTy :=
   match ty with
   | .data dty => pure $ dty
   | .range _ => .error msg
-partial def checkRange (msg: String)(ty: Ty) : Except String Range :=
+partial def checkRange (msg: String)(ty: Syntax.Ty) : Except String Syntax.Range :=
   match ty with
   | .data _ => .error msg
   | .range r => .ok r
 
-partial def ident (tyEnv: TyEnv) (i:Ident) : TyResult :=
+partial def ident (tyEnv: Syntax.TyEnv) (i:Syntax.Ident) : TyResult :=
   match tyEnv with
   | (i', ty)::rest => if i == i'
     then .ok ty
     else ident rest i
   | [] => match i with
     | .ident s => .error $ s!"Identifier {s} not found"
-partial def place (tyEnv: TyEnv) (p:PlaceExpr) : TyResult :=
+partial def place (tyEnv: Syntax.TyEnv) (p:Syntax.PlaceExpr) : TyResult :=
   match p with
   | .ident i => ident tyEnv i
   | .index indexExpr => do
@@ -95,4 +97,4 @@ partial def place (tyEnv: TyEnv) (p:PlaceExpr) : TyResult :=
     | _ => .error "not a tuple"
 end
 
---
+end Typecheck
