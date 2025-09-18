@@ -1,20 +1,22 @@
 #import "@preview/curryst:0.5.1": prooftree, rule
 #import "@preview/lovelace:0.3.0": pseudocode-list
 #set text(size: 14pt)
-= Todo
-- Introduce subtyping lattice
-- Lambdas
 = Grammar
-== Base Type
-$tau ::= sigma bar r$
+== Types
+$tau ::= sigma bar r bar alpha$
 
-$sigma ::= #[float] bar sigma times sigma bar eta dot sigma$
+#{
+  // eventually add:
+  let _ = $product_(x:r)sigma$
+}
+== Base Types
+$sigma ::= #[float] bar sigma times sigma bar eta dot sigma | sigma -> sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t$
+$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t bar t space t bar lambda x. t$
 
 - $i$ and $x$ are identifiers.
 == Literal
@@ -27,7 +29,10 @@ $p::= x bar p[t] bar p."fst" bar p."snd"$
 = Environment
 == Type Environment
 $Gamma ::= bullet bar Gamma,(x:tau)$
-
+== Kind Environment
+$Delta = bullet bar Delta, alpha$
+== Constraints
+$C = bullet bar C, (tau subset.sq.eq tau)$
 #pagebreak()
 = Typing Rules
 // Utility for declarative premise stacking
@@ -61,6 +66,37 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
 }
 #set align(center)
+
+// T-ABS
+#{
+  let premises = (
+    $alpha "fresh"$,
+    $Delta,alpha;Gamma,(x:alpha) tack t:sigma_2 bar C, (alpha subset.sq.eq sigma_1)$,
+  )
+  let conclusion = $Delta;Gamma tack lambda x. t: sigma_1 -> sigma_2 bar C$
+  let _rule = rule(
+    name: [T-ABS],
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
+
+// T-APP
+#{
+  let premises = (
+    $Delta;Gamma tack lambda x. t_1 : sigma_1 -> sigma_2 bar C$,
+    $Delta;Gamma tack t_2: sigma_3 bar C$,
+    $Delta;Gamma tack sigma_3 subset.eq.sq sigma_1 bar C$,
+  )
+  let conclusion = $Delta;Gamma tack (lambda x. t_1) t_2: sigma_2 bar C$
+  let _rule = rule(
+    name: [T-APP],
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
 
 // T-ARITH
 #{
@@ -205,10 +241,17 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
+
+//T-ABS
+#{
+  let premises = (
+    $Gamma$
+  )
+}
 #pagebreak()
 
 #set align(left)
-= Well-formedness Rules
+= Well-formedness Rule and Type Relation
 #set align(center)
 #{
   let premise = $eta_0 <= eta_1$
@@ -220,6 +263,27 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
   )
   prooftree(_rule)
 }
+#{
+  let premises = (
+    $eta_1 >= eta_2$,
+    $sigma_1 subset.eq.sq sigma_2$,
+  )
+  let conclusion = $eta_1 dot sigma_1 subset.eq.sq eta_2 dot sigma_2$
+  let _rule = rule(
+    name: "T-SUB",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
+#{
+  let _rule = rule(
+    name: "T-SUB-FLOAT",
+    $"float" subset.eq.sq "float"$,
+  )
+  prooftree(_rule)
+}
+
 #pagebreak()
 #set align(left)
 = Auxillary Definitions
