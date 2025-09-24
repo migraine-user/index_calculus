@@ -3,7 +3,7 @@
 #set text(size: 14pt)
 = Grammar
 == Types
-$tau ::= sigma bar r bar alpha$
+$tau ::= sigma bar r$
 
 #{
   // eventually add:
@@ -29,10 +29,6 @@ $p::= x bar p[t] bar p."fst" bar p."snd"$
 = Environment
 == Type Environment
 $Gamma ::= bullet bar Gamma,(x:tau)$
-== Kind Environment
-$Delta = bullet bar Delta, alpha$
-== Constraints
-$C = bullet bar C, (tau subset.sq.eq tau)$
 #pagebreak()
 = Typing Rules
 // Utility for declarative premise stacking
@@ -70,10 +66,9 @@ $C = bullet bar C, (tau subset.sq.eq tau)$
 // T-ABS
 #{
   let premises = (
-    $alpha "fresh"$,
-    $Delta,alpha;Gamma,(x:alpha) tack t:sigma_2 bar C, (alpha subset.sq.eq sigma_1)$,
+    $Gamma,(x:sigma_1) tack t:sigma_2$,
   )
-  let conclusion = $Delta;Gamma tack lambda x. t: sigma_1 -> sigma_2 bar C$
+  let conclusion = $Gamma tack lambda x. t: sigma_1 -> sigma_2$
   let _rule = rule(
     name: [T-ABS],
     conclusion,
@@ -85,11 +80,11 @@ $C = bullet bar C, (tau subset.sq.eq tau)$
 // T-APP
 #{
   let premises = (
-    $Delta;Gamma tack lambda x. t_1 : sigma_1 -> sigma_2 bar C$,
-    $Delta;Gamma tack t_2: sigma_3 bar C$,
-    $Delta;Gamma tack sigma_3 subset.eq.sq sigma_1 bar C$,
+    $Gamma tack lambda x. t_1 : sigma_1 -> sigma_2$,
+    $Gamma tack t_2: sigma_3$,
+    $Gamma tack sigma_3 <: sigma_1$,
   )
-  let conclusion = $Delta;Gamma tack (lambda x. t_1) t_2: sigma_2 bar C$
+  let conclusion = $Gamma tack (lambda x. t_1) t_2: sigma_2$
   let _rule = rule(
     name: [T-APP],
     conclusion,
@@ -241,18 +236,6 @@ $C = bullet bar C, (tau subset.sq.eq tau)$
   )
   prooftree(_rule)
 }
-
-//T-ABS
-#{
-  let premises = (
-    $Gamma$
-  )
-}
-#pagebreak()
-
-#set align(left)
-= Well-formedness Rule and Type Relation
-#set align(center)
 #{
   let premise = $eta_0 <= eta_1$
   let conclusion = $eta_0..eta_1:"ok"$
@@ -266,11 +249,24 @@ $C = bullet bar C, (tau subset.sq.eq tau)$
 #{
   let premises = (
     $eta_1 >= eta_2$,
-    $sigma_1 subset.eq.sq sigma_2$,
+    $sigma_1<: sigma_2$,
   )
-  let conclusion = $eta_1 dot sigma_1 subset.eq.sq eta_2 dot sigma_2$
+  let conclusion = $eta_1 dot sigma_1 <: eta_2 dot sigma_2$
   let _rule = rule(
-    name: "T-SUB",
+    name: "T-SUB-ARRAY",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
+#{
+  let premises = (
+    $sigma_1 <: sigma_2$,
+    $sigma_3 <: sigma_4$,
+  )
+  let conclusion = $sigma_1 times sigma_3 <: sigma_2 times sigma_4$
+  let _rule = rule(
+    name: "T-SUB-TUP",
     conclusion,
     ..premises,
   )
@@ -279,11 +275,23 @@ $C = bullet bar C, (tau subset.sq.eq tau)$
 #{
   let _rule = rule(
     name: "T-SUB-FLOAT",
-    $"float" subset.eq.sq "float"$,
+    $"float"<: "float"$,
   )
   prooftree(_rule)
 }
-
+#{
+  let premises = (
+    $sigma_(0+) :> sigma_(1+)$,
+    $sigma_(0-) <: sigma_(1-)$,
+  )
+  let conclusion = $sigma_(0+) -> sigma_(0-) <: sigma_(1+) -> sigma_(1-)$
+  let _rule = rule(
+    name: "T-SUB:FN",
+    conclusion,
+    ..premises,
+  )
+  prooftree(_rule)
+}
 #pagebreak()
 #set align(left)
 = Auxillary Definitions
