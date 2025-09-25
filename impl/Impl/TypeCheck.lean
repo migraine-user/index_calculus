@@ -7,11 +7,27 @@ abbrev TyResult := Except String Syntax.Ty
 mutual
 partial def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
   match t with
+    | .var id => ident tyEnv id
+    | .index arr i => do
+      let arr <- term tyEnv arr
+      let i <- term tyEnv i
+      let .data dty := arr | .error "LHS must be a data type"
+      let .array n dty := dty | .error "LHS must be an array"
+      let .range rnge := i | .error "Index must be a range type"
+      let .range l r := rnge | .error "Cannot index with empty array"
+      if r < n then pure $ .data dty else .error "Index out of bounds"
+    | .fst t => do
+      let ty <- term tyEnv t
+      let .data dty := ty | .error "must be data type"
+      let .tuple l r := dty | .error "trying to access fst of non-tuple"
+      pure $ .data l
+    | .snd t => do
+      let ty <- term tyEnv t
+      let .data dty := ty | .error "must be data type"
+      let .tuple l r := dty | .error "trying to access fst of non-tuple"
+      pure $ .data r
     | .floatLit _ => .ok $ .data $ .float
     | .natLit n => .ok $ .range $ .range n n
-    | .place p => do
-      let pType <- place tyEnv p
-      pure pType
     | .for_ i r body => do
       let r' := mkRng r
       let tyEnv' :=  (i,.range r')::tyEnv
@@ -48,13 +64,34 @@ partial def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
       if t1 == t2
         then .ok t1
         else .error "the branches must have the same type"
-    | .binary l op r => do
+    | .binary l _op r => do
       let l <- term tyEnv l
       let r <- term tyEnv r
       if l == r && r == .data .float
         then pure $ .data .float
         else .error "arithmetic only supports floats"
+    | .abs x dty body => do
+      let inTy := Syntax.Ty.data dty
+      let tyEnv' := (x, inTy)::tyEnv
+      let outputTy <- term tyEnv' body
+      match outputTy with
+      | .data odty => pure $ .data $ .func dty odty
+      | _ => .error "a function must return a value of data type."
+    | .app t1 t2 => do
+      let tt1 <- term tyEnv t1
+      let (iTy,oTy) <- match tt1 with
+                  | .data (.func a b) => Except.ok $ (a,b)
+                  | _ => .error "expected function type"
+      let tt2 <- term tyEnv t2
+      let xTy <- checkData "should be a data type" tt2
+      if subtype xTy iTy then pure $ .data oTy else .error "input is not subtype"
 
+partial def subtype (ty1: Syntax.DataTy) (ty2: Syntax.DataTy) : Bool :=
+  match (ty1, ty2) with
+  | (.float, .float) => true
+  | (.tuple a b, .tuple a' b') => subtype a a' && subtype b b'
+  | (.func a b, .func a' b') => subtype a' a && subtype b b'
+  | _ => false
 partial def checkData (msg: String)(ty: Syntax.Ty) : Except String Syntax.DataTy :=
   match ty with
   | .data dty => pure $ dty
@@ -71,30 +108,6 @@ partial def ident (tyEnv: Syntax.TyEnv) (i:Syntax.Ident) : TyResult :=
     else ident rest i
   | [] => match i with
     | .ident s => .error $ s!"Identifier {s} not found"
-partial def place (tyEnv: Syntax.TyEnv) (p:Syntax.PlaceExpr) : TyResult :=
-  match p with
-  | .ident i => ident tyEnv i
-  | .index indexExpr => do
-    let lhs <- place tyEnv indexExpr.place
-    let rhs <- term tyEnv indexExpr.index
-    match lhs with
-      | .data (.array n elemTy) => match rhs with
-        | .range .empty => .ok $ .data elemTy
-        | .range (.range l r) => (if r < n
-          then .ok $ .data elemTy
-          else .error "out of bounds access")
-        | _ => .error "you can only index with ranges"
-      | _ => .error "you can only index access arrays"
-  | .fst tup => do
-    let tup <- place tyEnv tup
-    match tup with
-    | .data $ .tuple fst snd => .ok $ .data fst
-    | _ => .error "not a tuple"
-  | .snd tup => do
-    let tup <- place tyEnv tup
-    match tup with
-    | .data $ .tuple fst snd => .ok $ .data snd
-    | _ => .error "not a tuple"
 end
 
 end Typecheck

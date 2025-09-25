@@ -10,13 +10,13 @@ $tau ::= sigma bar r$
   let _ = $product_(x:r)sigma$
 }
 == Base Types
-$sigma ::= #[float] bar sigma times sigma bar eta dot sigma | sigma -> sigma$
+$sigma ::= #[float] bar sigma times sigma bar eta dot sigma bar sigma -> sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
 $r::= eta..eta$
 = Term
-$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t bar t space t bar lambda x. t$
+$t ::= "fl" bar p bar "for" i : r "in" t bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t bar t space t bar lambda x : sigma. t$
 
 - $i$ and $x$ are identifiers.
 == Literal
@@ -80,11 +80,11 @@ $Gamma ::= bullet bar Gamma,(x:tau)$
 // T-APP
 #{
   let premises = (
-    $Gamma tack lambda x. t_1 : sigma_1 -> sigma_2$,
-    $Gamma tack t_2: sigma_3$,
+    $f : sigma_1 -> sigma_2$,
+    $Gamma tack t: sigma_3$,
     $Gamma tack sigma_3 <: sigma_1$,
   )
-  let conclusion = $Gamma tack (lambda x. t_1) t_2: sigma_2$
+  let conclusion = $f space t: sigma_2$
   let _rule = rule(
     name: [T-APP],
     conclusion,
