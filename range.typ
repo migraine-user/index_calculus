@@ -65,7 +65,7 @@ $rho ::= bullet bar rho, [x mapsto v]$
   )
 }
 #set align(center)
-
+#align(left)[#rect[$Gamma tack t : sigma$]]
 // T-ABS
 #{
   let premises = (
@@ -85,7 +85,7 @@ $rho ::= bullet bar rho, [x mapsto v]$
   let premises = (
     $f : sigma_1 -> sigma_2$,
     $Gamma tack t: sigma_3$,
-    $Gamma tack sigma_3 <: sigma_1$,
+    $exists sigma. sigma_3 inter.sq sigma_1 = sigma$,
   )
   let conclusion = $f space t: sigma_2$
   let _rule = rule(
@@ -142,7 +142,7 @@ $rho ::= bullet bar rho, [x mapsto v]$
     $eta_l..eta_r : "ok"$,
     $Gamma,(i:eta_l..eta_r) tack t_"body" : sigma$,
   )
-  let conclusion = $Gamma tack "for" i: eta_l..eta_r "in" t_"body" : "length"(r^prime) dot sigma$
+  let conclusion = $Gamma tack "for" i: eta_l..eta_r "in" t_"body" : "length"(eta_l..eta_r) dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,
@@ -211,8 +211,9 @@ $rho ::= bullet bar rho, [x mapsto v]$
     $r_"else" = (min(eta, eta_r)+1)..eta_r$,
     $r_"then" : "ok"$,
     $r_"else" : "ok"$,
-    $Gamma, (t:r_"then") tack t_"then" : sigma$,
-    $Gamma, (t:r_"else") tack t_"else" : sigma$,
+    $Gamma, (t:r_"then") tack t_"then" : sigma_1$,
+    $Gamma, (t:r_"else") tack t_"else" : sigma_2$,
+    $sigma_1 union.sq sigma_2 = sigma$,
   )
   let conclusion = $Gamma tack "if" t <= eta "then" t_"then" "else" t_"else" : sigma$
   let _rule = rule(
@@ -223,22 +224,9 @@ $rho ::= bullet bar rho, [x mapsto v]$
   prooftree(_rule)
 }
 
-//T-THEN-ONLY
-//If there is only if path possible, then only check the if path
-#{
-  let premises = (
-    $Gamma tack t:eta_l .. eta_r$,
-    $eta_r <= eta$,
-    $Gamma tack t_"then" : sigma$,
-  )
-  let conclusion = $Gamma tack "if" t <= eta "then" t_"then" "else" t_"else" : sigma$
-  let _rule = rule(
-    name: "T-THEN-ONLY",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
+#pagebreak()
+#align(left)[= Wellformedness Rules]
+#align(left)[#rect[$r:"ok"$]]
 #{
   let premise = $eta_0 <= eta_1$
   let conclusion = $eta_0..eta_1:"ok"$
@@ -249,59 +237,27 @@ $rho ::= bullet bar rho, [x mapsto v]$
   )
   prooftree(_rule)
 }
-#{
-  let premises = (
-    $eta_1 >= eta_2$,
-    $sigma_1<: sigma_2$,
-  )
-  let conclusion = $eta_1 dot sigma_1 <: eta_2 dot sigma_2$
-  let _rule = rule(
-    name: "T-SUB-ARRAY",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
-#{
-  let premises = (
-    $sigma_1 <: sigma_2$,
-    $sigma_3 <: sigma_4$,
-  )
-  let conclusion = $sigma_1 times sigma_3 <: sigma_2 times sigma_4$
-  let _rule = rule(
-    name: "T-SUB-TUP",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
-#{
-  let _rule = rule(
-    name: "T-SUB-FLOAT",
-    $"float"<: "float"$,
-  )
-  prooftree(_rule)
-}
-#{
-  let premises = (
-    $sigma_(0+) :> sigma_(1+)$,
-    $sigma_(0-) <: sigma_(1-)$,
-  )
-  let conclusion = $sigma_(0+) -> sigma_(0-) <: sigma_(1+) -> sigma_(1-)$
-  let _rule = rule(
-    name: "T-SUB-FN",
-    conclusion,
-    ..premises,
-  )
-  prooftree(_rule)
-}
-#pagebreak()
 #set align(left)
-= Auxillary Definitions
-$"length"(eta_0..eta_1) = eta_1 - eta_0 + 1$
-
+= Subtyping Rules
+#rect[$sigma union.sq sigma = sigma$]
+$
+  sigma union.sq sigma = sigma\
+  eta_1 dot sigma union.sq eta_2 dot sigma = min(eta_1, eta_2)dot sigma\
+  (sigma_1,sigma_2) union.sq (sigma_3,sigma_4) = (sigma_1 union.sq sigma_3, sigma_2 union.sq sigma_4) \
+  "float" union.sq "float" = "float"\
+  sigma_1 -> sigma_2 union.sq sigma_3 -> sigma_4 = (sigma_1 inter.sq sigma_3) -> (sigma_2 union.sq sigma_4)\
+$
+#rect[$sigma inter.sq sigma = sigma$]
+$
+  sigma inter.sq sigma = sigma\
+  eta_1 dot sigma inter.sq eta_2 dot sigma = max(eta_1, eta_2) dot sigma\
+  (sigma_1,sigma_2) inter.sq (sigma_3,sigma_4) = (sigma_1 inter.sq sigma_3, sigma_2 inter.sq sigma_4)\
+  "float" inter.sq "float" = "float"
+$
 #pagebreak()
-= Evaluation Rules
+#align(left)[= Evaluation Rules
+  #rect[$rho tack t --> t$]
+]
 #set align(center)
 #{
   let premise = $rho tack t_1 --> t_1^prime$
@@ -315,7 +271,7 @@ $"length"(eta_0..eta_1) = eta_1 - eta_0 + 1$
 }
 #{
   let premise = $rho tack t_2 --> t_2^prime$
-  let conclusion = $rho tack t_1 t_2 --> t_1 t_2^prime$
+  let conclusion = $rho tack v space t_2 --> v space t_2^prime$
   let _rule = rule(
     name: "E-APP2",
     conclusion,
@@ -450,7 +406,7 @@ $"length"(eta_0..eta_1) = eta_1 - eta_0 + 1$
 
 #{
   let premise = $rho tack t_2 --> t_2^prime$
-  let conclusion = $rho tack "if" v <= eta "then" t_2 "else" t_3 -->"if" v <= eta "then" t_2^prime "else" t_3$
+  let conclusion = $rho tack "if" v_1 <= eta "then" t_2 "else" t_3 -->"if" v <= eta "then" t_2^prime "else" t_3$
   let _rule = rule(
     name: "E-IF2",
     conclusion,
@@ -461,7 +417,7 @@ $"length"(eta_0..eta_1) = eta_1 - eta_0 + 1$
 
 #{
   let premise = $rho tack t_3 --> t_3^prime$
-  let conclusion = $rho tack "if" v <= eta "then" t_2 "else" t_3 --> "if" v <= eta "then" t_2 "else" t_3^prime$
+  let conclusion = $rho tack "if" v_1 <= eta "then" v_2 "else" t_3 --> "if" v <= eta "then" v_2 "else" t_3^prime$
   let _rule = rule(
     name: "E-IF3",
     conclusion,
@@ -502,3 +458,10 @@ $"length"(eta_0..eta_1) = eta_1 - eta_0 + 1$
 //   )
 //   prooftree(_rule)
 // }
+#pagebreak()
+#set align(left)
+= Auxillary Definitions
+$
+  "length"(eta_0..eta_1) = eta_1 - eta_0 + 1
+$
+
