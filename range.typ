@@ -465,3 +465,10 @@ $
   "length"(eta_0..eta_1) = eta_1 - eta_0 + 1
 $
 
+#rect[$(x:sigma) in Gamma$]
+$ (x:sigma) in Gamma,(x:sigma)\
+(x: sigma) in Gamma,(x':sigma') equiv (x:sigma) in Gamma $ where $x != x'$
+
+#rect[$[x mapsto v] in rho$]
+$ [x mapsto v] in rho,[x mapsto v]\
+[x mapsto v] in rho, [x' mapsto v'] equiv [x mapsto v] in rho $ where $x != x'$
