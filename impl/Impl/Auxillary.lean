@@ -1,5 +1,4 @@
 import Impl.Syntax
-def length(r:Syntax.Range): Nat :=
-  match r with
-  | .range l r => r - l + 1
-  | .empty => 0
+def length: Syntax.Range -> Nat
+| .range l r => r - l + 1
+| .empty => 0

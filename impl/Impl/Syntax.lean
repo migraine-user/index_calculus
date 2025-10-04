@@ -55,6 +55,6 @@ deriving Repr
 
 end
 
-def TyEnv := List (Ident × Ty)
+def TyEnv := List (Ident × Ty) deriving Repr
 
 end Syntax

@@ -33,7 +33,7 @@ end
 
 mutual
 def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
-  match t with
+match t with
     | .var id => ident tyEnv id
     | .index arr i => do
       let arr <- term tyEnv arr
@@ -77,7 +77,10 @@ def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
       let .range iR := iTy | .error "lhs must be a range"
       let .natLit n := t | .error "rhs must be a natural literal"
       let (rIf, rElse)  <- match iR with
-      | Syntax.Range.range a b => if a <= n && n + 1 <= b then pure (Syntax.Range.range a n, Syntax.Range.range (n+1) b) else .error "cannot narrow to empty range"
+      | Syntax.Range.range a b =>
+        let l := if a <= n then Syntax.Range.range a n else .empty
+        let r := if n + 1 <= b then Syntax.Range.range (n+1) b else .empty
+        pure (l, r)
       | .empty => pure (.empty, .empty)
       let (rIf, rElse) := (.range rIf, .range rElse)
       let .ok (.data t1) := term ((i,rIf)::tyEnv) if_body | .error "must be data type"
@@ -104,6 +107,7 @@ def term (tyEnv: Syntax.TyEnv) (t:Syntax.Term) : TyResult :=
       let (.data xTy) := tt2 | .error "should be a data type"
       let .some _ := meet xTy iTy | .error "supplied argument doesn't unify"
       pure $ .data oTy
+
 def ident (tyEnv: Syntax.TyEnv) (i:Syntax.Ident) : TyResult :=
   match tyEnv with
   | (i', ty)::rest => if i == i'

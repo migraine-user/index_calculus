@@ -9,7 +9,7 @@ syntax "empty" : range
 declare_syntax_cat data_type
 
 syntax "float" : data_type
-syntax "(" data_type "," data_type ")" : data_type
+syntax  data_type "×" data_type  : data_type
 syntax num "." data_type : data_type
 syntax data_type:60 "->" data_type:61 : data_type
 syntax "("data_type")":data_type
@@ -37,6 +37,8 @@ syntax _term " / " _term: _term
 
 syntax "λ" "(" ident ":" data_type ")" "." _term : _term
 
+syntax _term _term : _term
+
 syntax ident: _term
 
 syntax _term "[" _term "]" : _term
@@ -48,7 +50,7 @@ syntax _term ".snd" : _term
 syntax "[data_type|" data_type "]" : term
 macro_rules
   | `([data_type| float]) => `(Syntax.DataTy.float)
-  | `([data_type| ($a:data_type, $b:data_type)]) =>
+  | `([data_type| $a:data_type ×  $b:data_type]) =>
       `(Syntax.DataTy.tuple [data_type| $a] [data_type| $b])
   | `([data_type| $n:num . $ty:data_type]) =>
       `(Syntax.DataTy.array $n [data_type| $ty])
@@ -80,10 +82,10 @@ macro_rules
         [ident| $x]
         [lang| $t]
         [lang| $in_t])
-  | `([lang| ( a , b )]) =>
+  | `([lang| ( $a , $b )]) =>
       `(Syntax.Term.tuple
-        [lang| a]
-        [lang| b])
+        [lang| $a]
+        [lang| $b])
   | `([lang| if $lhs <= $rhs then $if_body else $else_body]) =>
       `(Syntax.Term.ternary
           (Syntax.Leq.leq [lang| $lhs] [lang| $rhs])
@@ -94,6 +96,8 @@ macro_rules
   | `([lang| $a * $b]) => `(Syntax.Term.binary [lang| $a] Syntax.Arith.times [lang| $b])
   | `([lang| $a / $b]) => `(Syntax.Term.binary [lang| $a] Syntax.Arith.divide [lang| $b])
   | `([lang| λ ($x:ident : $ty:data_type). $t ]) =>
-      `(Sntax.Term.abs [ident| $x] [data_type| $ty] [lang| $t])
+      `(Syntax.Term.abs [ident| $x] [data_type| $ty] [lang| $t])
+  | `([lang| $a $b]) =>
+      `(Syntax.Term.app [lang| $a] [lang| $b])
   | `([lang| $i:ident ]) => `(Syntax.Term.var [ident| $i] )
   | `([lang| $arr[$i]]) => `(Syntax.Term.index [lang| $arr] [lang| $i])
