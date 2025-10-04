@@ -14,7 +14,7 @@ inductive DataTy: Type
 | tuple: DataTy -> DataTy -> DataTy
 | array: Nat -> DataTy -> DataTy
 | func: DataTy -> DataTy -> DataTy
-deriving Repr
+deriving BEq, Repr
 
 -- Range
 inductive Range: Type
@@ -22,13 +22,12 @@ inductive Range: Type
 | empty
 deriving Repr
 
-
 inductive Ident: Type
 | ident: String -> Ident
 deriving BEq, Repr
 
 inductive Leq: Type
-| leq(lhs:Ident)(rhs:Term)
+| leq(lhs:Term)(rhs:Term)
 deriving Repr
 
 inductive Arith: Type
@@ -36,6 +35,7 @@ inductive Arith: Type
 | minus
 | times
 | divide
+deriving Repr
 
 inductive Term: Type
 | floatLit: Float -> Term

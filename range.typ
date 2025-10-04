@@ -14,7 +14,7 @@ $sigma ::= #[float] bar sigma times sigma bar eta dot sigma bar sigma -> sigma$
 == Natural Numbers
 $eta ::= 0 bar 1 bar ...$
 == Range
-$r::= eta..eta$
+$r::= eta..eta bar "empty"$
 = Term
 $t ::= p bar "let" x := t "in" t bar (t,t) bar "if" t <= eta "then" t "else" t bar t + t bar t * t bar t - t bar t \/t bar t space t bar v$
 
@@ -30,8 +30,6 @@ $p::= x bar p[t] bar p."fst" bar p."snd"$
 = Environment
 == Type Environment
 $Gamma ::= bullet bar Gamma,(x:tau)$
-== Evaluation Context
-$rho ::= bullet bar rho, [x mapsto v]$
 #pagebreak()
 = Typing Rules
 // Utility for declarative premise stacking
@@ -139,10 +137,10 @@ $rho ::= bullet bar rho, [x mapsto v]$
 // T-FOR
 #{
   let premises = (
-    $eta_l..eta_r : "ok"$,
-    $Gamma,(i:eta_l..eta_r) tack t_"body" : sigma$,
+    $r : "ok"$,
+    $Gamma,(i:r) tack t_"body" : sigma$,
   )
-  let conclusion = $Gamma tack "for" i: eta_l..eta_r "in" t_"body" : "length"(eta_l..eta_r) dot sigma$
+  let conclusion = $Gamma tack "for" i: r "in" t_"body" : "length"(r) dot sigma$
   let _rule = rule(
     name: "T-FOR",
     conclusion,
@@ -171,6 +169,16 @@ $rho ::= bullet bar rho, [x mapsto v]$
   prooftree(_rule)
 }
 
+// T-INDEX-EMPTY
+#{
+  let premises = (
+    $Gamma tack t: eta dot sigma$,
+    $Gamma tack t_"index" : "empty"$,
+  )
+  let conclusion = $Gamma tack t[t_"index"] : sigma$
+  let _rule = rule(name: "T-INDEX-EMPTY", conclusion, ..premises)
+  prooftree(_rule)
+}
 // T-FST
 #{
   let premise = $Gamma tack t:sigma_1 times sigma_2$
@@ -206,16 +214,16 @@ $rho ::= bullet bar rho, [x mapsto v]$
 //T-IF
 #{
   let premises = (
-    $Gamma tack t:eta_l .. eta_r$,
+    $Gamma tack x:eta_l .. eta_r$,
     $r_"then" = eta_l..min(eta, eta_r)$,
     $r_"else" = (min(eta, eta_r)+1)..eta_r$,
     $r_"then" : "ok"$,
     $r_"else" : "ok"$,
-    $Gamma, (t:r_"then") tack t_"then" : sigma_1$,
-    $Gamma, (t:r_"else") tack t_"else" : sigma_2$,
+    $Gamma, (x:r_"then") tack t_"then" : sigma_1$,
+    $Gamma, (x:r_"else") tack t_"else" : sigma_2$,
     $sigma_1 union.sq sigma_2 = sigma$,
   )
-  let conclusion = $Gamma tack "if" t <= eta "then" t_"then" "else" t_"else" : sigma$
+  let conclusion = $Gamma tack "if" x <= eta "then" t_"then" "else" t_"else" : sigma$
   let _rule = rule(
     name: "T-IF",
     conclusion,
@@ -227,6 +235,13 @@ $rho ::= bullet bar rho, [x mapsto v]$
 #pagebreak()
 #align(left)[= Wellformedness Rules]
 #align(left)[#rect[$r:"ok"$]]
+#{
+  prooftree(rule(
+    name: "W-EMPTY",
+    $"empty":"ok"$,
+  ))
+}
+
 #{
   let premise = $eta_0 <= eta_1$
   let conclusion = $eta_0..eta_1:"ok"$
@@ -242,7 +257,7 @@ $rho ::= bullet bar rho, [x mapsto v]$
 #rect[$sigma union.sq sigma = sigma$]
 $
   sigma union.sq sigma = sigma\
-  eta_1 dot sigma union.sq eta_2 dot sigma = min(eta_1, eta_2)dot sigma\
+  eta_1 dot sigma_1 union.sq eta_2 dot sigma_2 = min(eta_1, eta_2)dot (sigma_1 union.sq sigma_2)\
   (sigma_1,sigma_2) union.sq (sigma_3,sigma_4) = (sigma_1 union.sq sigma_3, sigma_2 union.sq sigma_4) \
   "float" union.sq "float" = "float"\
   sigma_1 -> sigma_2 union.sq sigma_3 -> sigma_4 = (sigma_1 inter.sq sigma_3) -> (sigma_2 union.sq sigma_4)\
@@ -250,18 +265,18 @@ $
 #rect[$sigma inter.sq sigma = sigma$]
 $
   sigma inter.sq sigma = sigma\
-  eta_1 dot sigma inter.sq eta_2 dot sigma = max(eta_1, eta_2) dot sigma\
+  eta_1 dot sigma_1 inter.sq eta_2 dot sigma_2 = max(eta_1, eta_2) dot (sigma_1 inter.sq sigma_2)\
   (sigma_1,sigma_2) inter.sq (sigma_3,sigma_4) = (sigma_1 inter.sq sigma_3, sigma_2 inter.sq sigma_4)\
   "float" inter.sq "float" = "float"
 $
 #pagebreak()
 #align(left)[= Evaluation Rules
-  #rect[$rho tack t --> t$]
+  #rect[$t --> t$]
 ]
 #set align(center)
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack t_1 t_2 --> t_1^prime t_2$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $t_1 t_2 --> t_1^prime t_2$
   let _rule = rule(
     name: "E-APP1",
     conclusion,
@@ -270,8 +285,8 @@ $
   prooftree(_rule)
 }
 #{
-  let premise = $rho tack t_2 --> t_2^prime$
-  let conclusion = $rho tack v space t_2 --> v space t_2^prime$
+  let premise = $t_2 --> t_2^prime$
+  let conclusion = $v space t_2 --> v space t_2^prime$
   let _rule = rule(
     name: "E-APP2",
     conclusion,
@@ -282,29 +297,19 @@ $
 #{
   let _rule = rule(
     name: "E-APPABS",
-    $rho tack (lambda (x : sigma_1). t_"body") v --> [x mapsto v] t_"body"$,
+    $(lambda (x : sigma_1). t_"body") v --> [x mapsto v] t_"body"$,
   )
   prooftree(_rule)
 }
 #{
-  let premise = $rho tack$
-}
-
-#{
-  let _rule = rule(
-    name: "E-VAR",
-    $rho tack x --> v$,
-    $[x mapsto v] in rho$,
-  )
-  prooftree(_rule)
+  let premise = $$
 }
 
 #{
   let premises = (
-    $rho tack t --> v$,
-    $rho, [x mapsto v] tack t_"body" --> t_"body"^prime$,
+    $t --> v$,
   )
-  let conclusion = $rho tack "let" x = t "in" t_"body" --> t_"body"^prime$
+  let conclusion = $"let" x = t "in" t_"body" --> [x mapsto v] t_"body"$
   let _rule = rule(
     name: "E-LET",
     conclusion,
@@ -314,8 +319,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack t_1[v] --> t_1^prime [v]$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $t_1[v] --> t_1^prime [v]$
   let _rule = rule(
     name: "E-INDEX",
     conclusion,
@@ -324,8 +329,8 @@ $
   prooftree(_rule)
 }
 #{
-  let premise = $rho, [i mapsto eta] tack t --> t^prime$
-  let conclusion = $rho tack ("for" i : r "in" t) [eta] --> t^prime$
+  let premise = $[i mapsto eta] t --> t^prime$
+  let conclusion = $("for" i : r "in" t) [eta] --> t^prime$
   let _rule = rule(
     name: "E-APPINDEX",
     conclusion,
@@ -335,8 +340,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack (t_1, t_2) --> (t_1^prime, t_2)$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $(t_1, t_2) --> (t_1^prime, t_2)$
   let _rule = rule(
     name: "E-TUP1",
     conclusion,
@@ -346,8 +351,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_2 --> t_2^prime$
-  let conclusion = $rho tack (t_1, t_2) --> (t_1, t_2^prime)$
+  let premise = $t_2 --> t_2^prime$
+  let conclusion = $(v_1, t_2) --> (v_1, t_2^prime)$
   let _rule = rule(
     name: "E-TUP2",
     conclusion,
@@ -357,8 +362,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack t_1."fst" --> t_1^prime."fst"$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $t_1."fst" --> t_1^prime."fst"$
   let _rule = rule(
     name: "E-FST",
     conclusion,
@@ -368,8 +373,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack t_1."snd" --> t_1^prime."snd"$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $t_1."snd" --> t_1^prime."snd"$
   let _rule = rule(
     name: "E-SND",
     conclusion,
@@ -381,21 +386,21 @@ $
 #{
   prooftree(rule(
     name: "E-FSTAPP",
-    $rho tack (v_1,v_2)."fst" --> v_1$,
+    $(v_1,v_2)."fst" --> v_1$,
   ))
 }
 
 #{
   prooftree(rule(
     name: "E-SNDAPP",
-    $rho tack (v_1,v_2)."snd" --> v_2$,
+    $(v_1,v_2)."snd" --> v_2$,
   ))
 }
 
 
 #{
-  let premise = $rho tack t_1 --> t_1^prime$
-  let conclusion = $rho tack "if" t_1 <= eta "then" t_2 "else" t_3 --> "if" t_1^prime <= eta "then" t_2 "else" t_3$
+  let premise = $t_1 --> t_1^prime$
+  let conclusion = $"if" t_1 <= eta "then" t_2 "else" t_3 --> "if" t_1^prime <= eta "then" t_2 "else" t_3$
   let _rule = rule(
     name: "E-IF1",
     conclusion,
@@ -405,8 +410,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_2 --> t_2^prime$
-  let conclusion = $rho tack "if" v_1 <= eta "then" t_2 "else" t_3 -->"if" v <= eta "then" t_2^prime "else" t_3$
+  let premise = $t_2 --> t_2^prime$
+  let conclusion = $"if" v_1 <= eta "then" t_2 "else" t_3 -->"if" v <= eta "then" t_2^prime "else" t_3$
   let _rule = rule(
     name: "E-IF2",
     conclusion,
@@ -416,8 +421,8 @@ $
 }
 
 #{
-  let premise = $rho tack t_3 --> t_3^prime$
-  let conclusion = $rho tack "if" v_1 <= eta "then" v_2 "else" t_3 --> "if" v <= eta "then" v_2 "else" t_3^prime$
+  let premise = $t_3 --> t_3^prime$
+  let conclusion = $"if" v_1 <= eta "then" v_2 "else" t_3 --> "if" v <= eta "then" v_2 "else" t_3^prime$
   let _rule = rule(
     name: "E-IF3",
     conclusion,
@@ -428,7 +433,7 @@ $
 
 #{
   let premise = $eta_1 <= eta_2$
-  let conclusion = $rho tack "if" eta_1 <= eta_2 "then" v_1 "else" v_2 --> v_1$
+  let conclusion = $"if" eta_1 <= eta_2 "then" v_1 "else" v_2 --> v_1$
   let _rule = rule(
     name: "E-IFTRUE",
     conclusion,
@@ -439,7 +444,7 @@ $
 
 #{
   let premise = $eta_1 > eta_2$
-  let conclusion = $rho tack "if" eta_1 <= eta_2 "then" v_1 "else" v_2 --> v_2$
+  let conclusion = $"if" eta_1 <= eta_2 "then" v_1 "else" v_2 --> v_2$
   let _rule = rule(
     name: "E-IFFALSE",
     conclusion,
@@ -448,27 +453,14 @@ $
   prooftree(_rule)
 }
 
-// #{
-//   let premise = $rho \\[i mapsto v] tack t_1 --> t_1^prime$
-//   let conclusion = $rho tack "for" i:r space t--> "for" i:r space t_1^prime$
-//   let _rule = rule(
-//     name: "E-FOR",
-//     conclusion,
-//     premise,
-//   )
-//   prooftree(_rule)
-// }
 #pagebreak()
 #set align(left)
 = Auxillary Definitions
 $
+  "length"("empty") = 0\
   "length"(eta_0..eta_1) = eta_1 - eta_0 + 1
 $
 
 #rect[$(x:sigma) in Gamma$]
 $ (x:sigma) in Gamma,(x:sigma)\
 (x: sigma) in Gamma,(x':sigma') equiv (x:sigma) in Gamma $ where $x != x'$
-
-#rect[$[x mapsto v] in rho$]
-$ [x mapsto v] in rho,[x mapsto v]\
-[x mapsto v] in rho, [x' mapsto v'] equiv [x mapsto v] in rho $ where $x != x'$
